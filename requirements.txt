@@ -1,4 +1,5 @@
 streamlit
-openai
 langchain
-
+openai
+chromadb
+tiktoken
