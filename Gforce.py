@@ -13,7 +13,7 @@ def generate_response(uploaded_file, openai_api_key, query_text):
         df = extract_data(uploaded_file)
         documents = [df.read().decode()]
     # Split documents into chunks
-    text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    text_splitter = CharacterTextSplitter(chunk_size=10000000, chunk_overlap=0)
     texts = text_splitter.create_documents(documents)
     # Select embeddings
     embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
@@ -26,8 +26,8 @@ def generate_response(uploaded_file, openai_api_key, query_text):
     return qa.run(query_text)
 
 # Page title
-st.set_page_config(page_title='🦜🔗 Ask the Doc App')
-st.title('🦜🔗 Ask the Doc App')
+st.set_page_config(page_title='Gforce Resume Reader')
+st.title('Gforce Resume Reader')
 
 # File upload
 uploaded_file  = st.file_uploader('Please upload you resumes', type='pdf')
@@ -53,6 +53,35 @@ with st.form('myform', clear_on_submit=True):
 # Form input and query
 result = []
 
+def create_temp_file(uploaded_file):
+    """
+    Create a temporary file from an uploaded file.
 
+    :param uploaded_file: The uploaded file to create a temporary file from.
+
+    :return: The path to the temporary file.
+    """
+    with tempfile.NamedTemporaryFile(delete=False, suffix='.txt') as temp_file:
+        if uploaded_file.type == 'application/pdf':
+            temp_file.write(pdf_to_text(uploaded_file))
+        else:
+            temp_file.write(uploaded_file.getvalue())
+    return temp_file.name
 if len(result):
     st.info(response)
+
+
+def pdf_to_text(pdf_file):
+    """
+    Convert a PDF file to a string of text.
+
+    :param pdf_file: The PDF file to convert.
+
+    :return: A string of text.
+    """
+    pdf_reader = PyPDF2.PdfReader(pdf_file)
+    text = StringIO()
+    for i in range(len(pdf_reader.pages)):
+        p = pdf_reader.pages[i]
+        text.write(p.extract_text())
+    return text.getvalue().encode('utf-8')
