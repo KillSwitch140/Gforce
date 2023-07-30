@@ -9,7 +9,7 @@ from langchain.document_loaders import PyPDFLoader
 def generate_response(uploaded_file, openai_api_key, query_text):
     # Load document if file is uploaded
     if uploaded_file is not None:
-       loader = PyPDFLoader(uploaded_file)
+        loader = PyPDFLoader(uploaded_file)
         documents = loader.load()
         # Split documents into chunks
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
