@@ -1,5 +1,6 @@
 import streamlit as st
 import os
+import pdfplumber
 from langchain.llms import OpenAI
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
@@ -30,6 +31,14 @@ st.title('🦜🔗 Ask the Doc App')
 
 # File upload
 uploaded_file  = st.file_uploader('Please upload you resumes', type='pdf')
+
+def extract_data(feed):
+    data = []
+    with pdfplumber.load(feed) as pdf:
+        pages = pdf.pages
+        for p in pages:
+            data.append(p.extract_tables())
+    return None # build more code to return a dataframe
 # Query text
 query_text = st.text_input('Enter your question:', placeholder = 'Please provide a short summary.', disabled=not uploaded_file)
 
