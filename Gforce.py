@@ -6,12 +6,10 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain.document_loaders import PyPDFLoader
-def generate_response(uploaded_file, openai_api_key, query_text):
+def generate_response(df, openai_api_key, query_text):
     # Load document if file is uploaded
     if uploaded_file is not None:
-        loader = PyPDFLoader(uploaded_file)
-        documents = loader.load()
-        print(len(documents))
+        documents = [uploaded_file.read().decode()
         # Split documents into chunks
         text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
         texts = text_splitter.create_documents(documents)
@@ -31,6 +29,8 @@ st.title('🦜🔗 Ask the Doc App')
 
 # File upload
 uploaded_file = st.file_uploader('Please upload you resumes', type='pdf')
+if uploaded_file is not None:
+    df = extract_data(uploaded_file)
 # Query text
 query_text = st.text_input('Enter your question:', placeholder = 'Please provide a short summary.', disabled=not uploaded_file)
 
