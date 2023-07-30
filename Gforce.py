@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 from langchain.llms import OpenAI
 from langchain.text_splitter import CharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
@@ -28,20 +29,13 @@ st.set_page_config(page_title='🦜🔗 Ask the Doc App')
 st.title('🦜🔗 Ask the Doc App')
 
 # File upload
-uploaded_file = st.file_uploader('Upload resumes', type='pdf')
+uploaded_file = st.file_uploader('Please upload you resumes', type='pdf')
 # Query text
 query_text = st.text_input('Enter your question:', placeholder = 'Please provide a short summary.', disabled=not uploaded_file)
-
+openai_api_key = st.secrets["OPENAI_API_KEY"]
 # Form input and query
 result = []
-with st.form('myform', clear_on_submit=True):
-    openai_api_key = st.text_input('OpenAI API Key', type='password', disabled=not (uploaded_file and query_text))
-    submitted = st.form_submit_button('Submit', disabled=not(uploaded_file and query_text))
-    if submitted and openai_api_key.startswith('sk-'):
-        with st.spinner('Calculating...'):
-            response = generate_response(uploaded_file, openai_api_key, query_text)
-            result.append(response)
-            del openai_api_key
+
 
 if len(result):
     st.info(response)
