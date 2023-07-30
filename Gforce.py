@@ -33,9 +33,12 @@ uploaded_file = st.file_uploader('Please upload you resumes', type='pdf')
 # Query text
 query_text = st.text_input('Enter your question:', placeholder = 'Please provide a short summary.', disabled=not uploaded_file)
 openai_api_key = st.secrets["OPENAI_API_KEY"]
-with st.spinner('Calculating...'):
+submitted = st.form_submit_button('Submit', disabled=not(uploaded_file and query_text))
+    if submitted and openai_api_key.startswith('sk-'):
+        with st.spinner('Calculating...'):
             response = generate_response(uploaded_file, openai_api_key, query_text)
             result.append(response)
+            del openai_api_key
 # Form input and query
 result = []
 
