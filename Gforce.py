@@ -32,8 +32,10 @@ st.title('🦜🔗 Ask the Doc App')
 uploaded_file = st.file_uploader('Please upload you resumes', type='pdf')
 # Query text
 query_text = st.text_input('Enter your question:', placeholder = 'Please provide a short summary.', disabled=not uploaded_file)
-openai_api_key = st.secrets["OPENAI_API_KEY"]
-submitted = st.form_submit_button('Submit', disabled=not(uploaded_file and query_text))
+
+with st.form('myform', clear_on_submit=True):
+    openai_api_key = st.secrets["OPENAI_API_KEY"]
+    submitted = st.form_submit_button('Submit', disabled=not(uploaded_file and query_text))
     if submitted and openai_api_key.startswith('sk-'):
         with st.spinner('Calculating...'):
             response = generate_response(uploaded_file, openai_api_key, query_text)
