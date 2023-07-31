@@ -12,6 +12,8 @@ from langchain.chains import RetrievalQA
 from PyPDF2 import PdfReader
 import openai
 import re
+
+
 # Set up your OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 
@@ -38,9 +40,15 @@ def extract_email(text):
 
 # Function to extract past experience using regular expression
 def extract_experience(text):
-    experience_pattern = r"\bExperience\b\s*:(.*?)\bEducation\b"
-    experience_match = re.search(experience_pattern, text, re.DOTALL | re.IGNORECASE)
+    experience_pattern = r"(?i)\bExperience\b\s*:([\s\S]*?)(?:(?=\b(?:Education|GPA)\b)|$)"
+    experience_match = re.search(experience_pattern, text)
     return experience_match.group(1).strip() if experience_match else None
+
+# Function to extract candidate name
+def extract_candidate_name(text):
+    name_pattern = r"\b(?:Candidate|Name)\b\s*:\s*(.+)"
+    name_match = re.search(name_pattern, text, re.IGNORECASE)
+    return name_match.group(1).strip() if name_match else "Candidate"
 
 # Page title and styling
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
@@ -63,8 +71,11 @@ if uploaded_files:
             gpa = extract_gpa(resume_text)
             email = extract_email(resume_text)
             experience = extract_experience(resume_text)
+            # Extract candidate name
+            candidate_name = extract_candidate_name(resume_text)
             # Store the information for each candidate
             candidate_info = {
+                'name': candidate_name,
                 'gpa': gpa,
                 'email': email,
                 'experience': experience,
@@ -75,7 +86,7 @@ if uploaded_files:
 if candidates_info:
     st.subheader('Extracted Information for Each Candidate:')
     for i, candidate_info in enumerate(candidates_info):
-        st.markdown(f'**Candidate {i+1}:**')
+        st.markdown(f'**{candidate_info["name"]}:**')
         st.markdown(f'- GPA: {candidate_info["gpa"]}')
         st.markdown(f'- Email: {candidate_info["email"]}')
         st.markdown(f'- Past Experience:')
