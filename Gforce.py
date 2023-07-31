@@ -29,7 +29,6 @@ st.title('GForce Resume Reader')
 
 # List to store uploaded resume contents
 uploaded_resumes = []
-
 # File upload
 uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
 
