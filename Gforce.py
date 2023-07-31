@@ -14,7 +14,7 @@ import openai
 import spacy
 import subprocess
 
-# Set up your OpenAI API key
+# Set up your OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 
 def read_pdf_text(uploaded_file):
@@ -26,12 +26,31 @@ def read_pdf_text(uploaded_file):
 
     return text
 
+# Function to extract GPA using regular expression
+def extract_gpa(text):
+    gpa_pattern = r"\bGPA\b\s*:\s*([\d.]+)"
+    gpa_match = re.search(gpa_pattern, text, re.IGNORECASE)
+    return gpa_match.group(1) if gpa_match else None
+
+# Function to extract email using regular expression
+def extract_email(text):
+    email_pattern = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
+    email_match = re.search(email_pattern, text)
+    return email_match.group() if email_match else None
+
+# Function to extract past experience using regular expression
+def extract_experience(text):
+    experience_pattern = r"\bExperience\b\s*:(.*?)\bEducation\b"
+    experience_match = re.search(experience_pattern, text, re.DOTALL | re.IGNORECASE)
+    return experience_match.group(1).strip() if experience_match else None
+
 # Page title and styling
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
 st.title('GForce Resume Reader')
 
-# List to store uploaded resume contents
+# List to store uploaded resume contents and extracted information
 uploaded_resumes = []
+candidates_info = []
 
 # File upload
 uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
@@ -40,7 +59,29 @@ uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accep
 if uploaded_files:
     for uploaded_file in uploaded_files:
         if uploaded_file is not None:
-            uploaded_resumes.append(read_pdf_text(uploaded_file))
+            resume_text = read_pdf_text(uploaded_file)
+            uploaded_resumes.append(resume_text)
+            # Extract GPA, email, and past experience
+            gpa = extract_gpa(resume_text)
+            email = extract_email(resume_text)
+            experience = extract_experience(resume_text)
+            # Store the information for each candidate
+            candidate_info = {
+                'gpa': gpa,
+                'email': email,
+                'experience': experience,
+            }
+            candidates_info.append(candidate_info)
+
+# Display extracted information for each candidate
+if candidates_info:
+    st.subheader('Extracted Information for Each Candidate:')
+    for i, candidate_info in enumerate(candidates_info):
+        st.markdown(f'**Candidate {i+1}:**')
+        st.markdown(f'- GPA: {candidate_info["gpa"]}')
+        st.markdown(f'- Email: {candidate_info["email"]}')
+        st.markdown(f'- Past Experience:')
+        st.text(candidate_info["experience"])
 
 # Retrieve or initialize conversation history using SessionState
 if 'conversation_history' not in st.session_state:
