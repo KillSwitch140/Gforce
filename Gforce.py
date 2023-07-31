@@ -39,18 +39,18 @@ def extract_email(text):
     return email_match.group() if email_match else None
 
 # Function to extract past experience using GPT-3's prompt
-def extract_candidate_name(resume_text):
-    prompt = f"Please provide your full name:"
-    response = openai.Completion.create(
+def extract_experience(resume_text):
+    prompt = f"What is candidate's past experience"
+    response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        prompt=prompt,
-        temperature=0,
-        max_tokens=100,
-        stop=["\n"],
+        messages=[
+            {"role": "system", "content": prompt},
+            {"role": "user", "content": resume_text},
+        ],
         api_key=openai_api_key
     )
-    candidate_name = response['choices'][0]['text'].strip()
-    return candidate_name
+    experience = response['choices'][0]['message']['content'].strip()
+    return experience
     
 # Function to extract candidate name using GPT-3.5-turbo model
 def extract_candidate_name(resume_text):
