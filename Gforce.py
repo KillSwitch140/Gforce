@@ -45,13 +45,16 @@ def extract_experience(resume_text):
         model="gpt-3.5-turbo",
         prompt=prompt,
         temperature=0,
-        max_tokens=100,
+        max_tokens=500,  # Adjust the max_tokens based on expected response length
         stop=["\n"],
         api_key=openai_api_key
     )
-    experience = response['choices'][0]['text'].replace(prompt, "").strip()
+    experience_lines = response['choices'][0]['text'].split("\n")
+    # Filter out empty lines and the prompt itself
+    experience_lines = [line.strip() for line in experience_lines if line.strip() and line.strip() != prompt]
+    experience = " ".join(experience_lines).strip()
     return experience
-
+    
 # Function to extract candidate name using GPT-3.5-turbo model
 def extract_candidate_name(resume_text):
     prompt = f"What is candidate's name?"
