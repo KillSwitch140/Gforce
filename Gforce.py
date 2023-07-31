@@ -38,10 +38,10 @@ def extract_email(text):
     email_match = re.search(email_pattern, text)
     return email_match.group() if email_match else None
 
-# Function to extract past experience using regular expression
-def extract_experience(text):
-   prompt = f"What iscandidate's past experience?"
-   response = openai.ChatCompletion.create(
+# Function to extract past experience using GPT-3's prompt
+def extract_experience(resume_text):
+    prompt = f"What is candidate's past experience?"
+    response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": prompt},
@@ -49,8 +49,8 @@ def extract_experience(text):
         ],
         api_key=openai_api_key
     )
-    candidate_experience = response['choices'][0]['message']['content'].strip()
-    return candidate_experience 
+    experience = response['choices'][0]['message']['content'].strip()
+    return experience
 
 # Function to extract candidate name using GPT-3.5-turbo model
 def extract_candidate_name(resume_text):
@@ -87,7 +87,7 @@ if uploaded_files:
             gpa = extract_gpa(resume_text)
             email = extract_email(resume_text)
             experience = extract_experience(resume_text)
-            # Extract candidate name using GPT-3.5-turbo model
+            # Extract candidate name using GPT-3's prompt
             candidate_name = extract_candidate_name(resume_text)
             # Store the information for each candidate
             candidate_info = {
@@ -100,13 +100,12 @@ if uploaded_files:
 
 # Display extracted information for each candidate
 if candidates_info:
-    st.subheader('Candidate Info:')
+    st.subheader('Extracted Information for Each Candidate:')
     for candidate_info in candidates_info:
-        st.markdown(f'**{candidate_info["name"]}**')
+        st.markdown(f'**{candidate_info["name"]}:**')
         st.markdown(f'- GPA: {candidate_info["gpa"]}')
         st.markdown(f'- Email: {candidate_info["email"]}')
         st.markdown(f'- Past Experience:')
-        st.text(candidate_info["experience"])
         
 # Retrieve or initialize conversation history using SessionState
 if 'conversation_history' not in st.session_state:
