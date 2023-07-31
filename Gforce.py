@@ -26,30 +26,36 @@ def read_pdf_text(uploaded_file):
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
 st.title('GForce Resume Reader')
 
+# List to store uploaded resume contents
+uploaded_resumes = []
+
 # File upload
-uploaded_file = st.file_uploader('Please upload your resume', type='pdf')
+uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
+
+# Process uploaded resumes
+if uploaded_files:
+    for uploaded_file in uploaded_files:
+        if uploaded_file is not None:
+            uploaded_resumes.append(read_pdf_text(uploaded_file))
 
 # Retrieve or initialize conversation history using SessionState
 if 'conversation_history' not in st.session_state:
     st.session_state.conversation_history = []
 
-# Read the PDF content and set it as the initial context for the chatbot
-if uploaded_file is not None:
-    initial_context = read_pdf_text(uploaded_file)
-    st.session_state.conversation_history = [{'role': 'system', 'content': initial_context}]
-
 # User query
-query_text = st.text_input('You (Type your message here):', value='', help='Ask away!', type='default')
+user_query = st.text_area('You (Type your message here):', value='', help='Ask away!', height=100, key="user_input")
 
 # Form input and query
-with st.form('myform', clear_on_submit=True):
-    st.form_submit_button('Send', help='Click to submit the query')
-    if query_text.strip() != '':
+send_user_query = st.button('Send', help='Click to submit the query', key="send_user_query")
+if send_user_query:
+    if user_query.strip() != '':
         with st.spinner('Chatbot is typing...'):
             # Add the user query to the conversation history
-            st.session_state.conversation_history.append({'role': 'user', 'content': query_text})
+            st.session_state.conversation_history.append({'role': 'user', 'content': user_query})
             # Get the updated conversation history
             conversation_history = st.session_state.conversation_history.copy()
+            # Append the uploaded resumes' content to the conversation history
+            conversation_history.extend([{'role': 'system', 'content': resume_text} for resume_text in uploaded_resumes])
             # Generate the response using the updated conversation history
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
@@ -61,21 +67,66 @@ with st.form('myform', clear_on_submit=True):
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': assistant_response})
 
-# Display the entire conversation history with chat bubbles
-if st.session_state.conversation_history:
-    st.header('Conversation History:')
-    chat_history_placeholder = st.empty()  # Placeholder to store chat history
+# Chat UI with sticky headers and input prompt
+st.markdown("""
+<style>
+    .chat-container {
+        height: 25px;
+        overflow-y: scroll;
+    }
+    .user-bubble {
+        display: flex;
+        justify-content: flex-start;
+    }
+    .user-bubble > div {
+        padding: 15px;
+        background-color: #e0e0e0;
+        border-radius: 10px;
+        width: 50%;
+        margin-left: 50%;
+    }
+    .assistant-bubble {
+        display: flex;
+        justify-content: flex-end;
+    }
+    .assistant-bubble > div {
+        padding: 15px;
+        background-color: #0078d4;
+        color: white;
+        border-radius: 10px;
+        width: 50%;
+        margin-right: 50%;
+    }
+    .chat-input-prompt {
+        position: sticky;
+        bottom: 0;
+        background-color: white;
+        padding: 10px;
+        width: 100%;
+    }
+    .chat-header {
+        position: sticky;
+        top: 0;
+        background-color: #f2f2f2;
+        padding: 10px;
+        width: 100%;
+    }
+</style>
+""", unsafe_allow_html=True)
 
-    for message in st.session_state.conversation_history:
+st.markdown('<div class="chat-container">', unsafe_allow_html=True)
+
+# Display the entire conversation history in chat format
+if st.session_state.conversation_history:
+    for i, message in enumerate(st.session_state.conversation_history):
         if message['role'] == 'user':
-            st.markdown(f'<div style="display: flex; justify-content: flex-start; margin-bottom: 5px;">'
-                        f'<div style="display: block; padding: 5px; background-color: #e0e0e0; border-radius: 10px; width: 50%;">{message["content"]}</div>'
-                        f'</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="user-bubble"><div>{message["content"]}</div></div>', unsafe_allow_html=True)
         elif message['role'] == 'assistant':
-            st.markdown(f'<div style="display: flex; justify-content: flex-end; margin-bottom: 5px;">'
-                        f'<div style="display: block; padding: 5px; background-color: #0078d4; color: white; border-radius: 10px; width: 50%; margin-left: 50%;">{message["content"]}</div>'
-                        f'</div>', unsafe_allow_html=True)
+            st.markdown(f'<div class="assistant-bubble"><div>{message["content"]}</div></div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)
 
 # Add a clear conversation button
-if st.button('Clear Conversation'):
+clear_conversation = st.button('Clear Conversation', key="clear_conversation")
+if clear_conversation:
     st.session_state.conversation_history.clear()
