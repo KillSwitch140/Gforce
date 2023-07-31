@@ -107,7 +107,7 @@ if candidates_info:
         st.markdown(f'- GPA: {candidate_info["gpa"]}')
         st.markdown(f'- Email: {candidate_info["email"]}')
         st.markdown(f'- Past Experience:')
-        st.text(candidate_info["experience"])
+        st.write(candidate_info["experience"])
        
 # Retrieve or initialize conversation history using SessionState
 if 'conversation_history' not in st.session_state:
