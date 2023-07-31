@@ -41,7 +41,7 @@ def extract_email(text):
 # Function to extract past experience using regular expression
 def extract_experience(text):
    prompt = f"What iscandidate's past experience?"
-    response = openai.ChatCompletion.create(
+   response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": prompt},
@@ -50,7 +50,7 @@ def extract_experience(text):
         api_key=openai_api_key
     )
     candidate_experience = response['choices'][0]['message']['content'].strip()
-    return candidate_experience
+    return candidate_experience 
 
 # Function to extract candidate name using GPT-3.5-turbo model
 def extract_candidate_name(resume_text):
