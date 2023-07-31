@@ -40,7 +40,7 @@ def extract_email(text):
 
 # Function to extract past experience using GPT-3's prompt
 def extract_experience(resume_text):
-    prompt = f"Please provide your past experience:"
+    prompt = f"What is candidates past experience in 100 words?"
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -54,7 +54,7 @@ def extract_experience(resume_text):
 
 # Function to extract candidate name using GPT-3's prompt
 def extract_candidate_name(resume_text):
-    prompt = f"Please provide your full name:"
+    prompt = f"What is candidate's name?"
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
