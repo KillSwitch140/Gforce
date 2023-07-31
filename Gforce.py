@@ -40,16 +40,16 @@ def extract_email(text):
 
 # Function to extract past experience using GPT-3's prompt
 def extract_experience(resume_text):
-    prompt = f"What is candidate's past experience?"
-    response = openai.ChatCompletion.create(
+    prompt = f"Please provide your past experience:"
+    response = openai.Completion.create(
         model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": resume_text},
-        ],
+        prompt=prompt,
+        temperature=0,
+        max_tokens=100,
+        stop=["\n"],
         api_key=openai_api_key
     )
-    experience = response['choices'][0]['message']['content'].strip()
+    experience = response['choices'][0]['text'].replace(prompt, "").strip()
     return experience
 
 # Function to extract candidate name using GPT-3.5-turbo model
@@ -106,7 +106,7 @@ if candidates_info:
         st.markdown(f'- GPA: {candidate_info["gpa"]}')
         st.markdown(f'- Email: {candidate_info["email"]}')
         st.markdown(f'- Past Experience:')
-        
+        st.text(candidate_info["experience"])
 # Retrieve or initialize conversation history using SessionState
 if 'conversation_history' not in st.session_state:
     st.session_state.conversation_history = []
