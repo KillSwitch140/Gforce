@@ -46,7 +46,7 @@ def extract_experience(text):
 
 # Function to extract candidate name using GPT-3.5-turbo model
 def extract_candidate_name(resume_text):
-    prompt = f"What is current candidate's name:"
+    prompt = f"What is current candidate's name?"
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -94,7 +94,7 @@ if uploaded_files:
 if candidates_info:
     st.subheader('Candidate Info:')
     for candidate_info in candidates_info:
-        st.markdown(f'**{candidate_info["name"]}:**')
+        st.markdown(f'**{candidate_info["name"]}**')
         st.markdown(f'- GPA: {candidate_info["gpa"]}')
         st.markdown(f'- Email: {candidate_info["email"]}')
         st.markdown(f'- Past Experience:')
