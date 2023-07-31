@@ -105,11 +105,11 @@ if uploaded_files:
 if candidates_info:
     st.subheader('Extracted Information for Each Candidate:')
     for candidate_info in candidates_info:
-        st.markdown(f'**{candidate_info["name"]}:**')
+        st.markdown(f'**{candidate_info["name"]}**')
         st.markdown(f'- GPA: {candidate_info["gpa"]}')
         st.markdown(f'- Email: {candidate_info["email"]}')
-        st.markdown(f'- Past Experience:')
-        st.text(candidate_info["experience"])
+        st.markdown(f'**candidate_info["experience"]**')
+       
 # Retrieve or initialize conversation history using SessionState
 if 'conversation_history' not in st.session_state:
     st.session_state.conversation_history = []
