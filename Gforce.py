@@ -62,6 +62,9 @@ def extract_candidate_name(resume_text):
             {"role": "user", "content": resume_text},
         ],
         api_key=openai_api_key
+        )
+    candidate_name = response['choices'][0]['message']['content'].strip()
+    return candidate_name
 
 # Page title and styling
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
