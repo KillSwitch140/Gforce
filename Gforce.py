@@ -17,15 +17,6 @@ import re
 # Set up your OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 
-def read_pdf_text(uploaded_file):
-    pdf_reader = PyPDF2.PdfReader(uploaded_file)
-    text = ""
-
-    for page in pdf_reader.pages:
-        text += page.extract_text()
-
-    return text
-
 # Function to extract GPA using regular expression
 def extract_gpa(text):
     gpa_pattern = r"\bGPA\b\s*:\s*([\d.]+)"
@@ -44,11 +35,16 @@ def extract_experience(text):
     experience_match = re.search(experience_pattern, text)
     return experience_match.group(1).strip() if experience_match else None
 
-# Function to extract candidate name
-def extract_candidate_name(text):
-    name_pattern = r"\b(?:Candidate|Name)\b\s*:\s*(.+)"
-    name_match = re.search(name_pattern, text, re.IGNORECASE)
-    return name_match.group(1).strip() if name_match else "Candidate"
+# Function to extract candidate name using GPT-3's prompt
+def extract_candidate_name(resume_text):
+    prompt = f"Please provide your full name:"
+    response = openai.Completion.create(
+        model="gpt-3.5-turbo",
+        prompt=prompt,
+        api_key=openai_api_key
+    )
+    candidate_name = response['choices'][0]['text'].strip()
+    return candidate_name
 
 # Page title and styling
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
@@ -71,7 +67,7 @@ if uploaded_files:
             gpa = extract_gpa(resume_text)
             email = extract_email(resume_text)
             experience = extract_experience(resume_text)
-            # Extract candidate name
+            # Extract candidate name using GPT-3's prompt
             candidate_name = extract_candidate_name(resume_text)
             # Store the information for each candidate
             candidate_info = {
@@ -85,13 +81,12 @@ if uploaded_files:
 # Display extracted information for each candidate
 if candidates_info:
     st.subheader('Extracted Information for Each Candidate:')
-    for i, candidate_info in enumerate(candidates_info):
+    for candidate_info in candidates_info:
         st.markdown(f'**{candidate_info["name"]}:**')
         st.markdown(f'- GPA: {candidate_info["gpa"]}')
         st.markdown(f'- Email: {candidate_info["email"]}')
         st.markdown(f'- Past Experience:')
         st.text(candidate_info["experience"])
-
 # Retrieve or initialize conversation history using SessionState
 if 'conversation_history' not in st.session_state:
     st.session_state.conversation_history = []
