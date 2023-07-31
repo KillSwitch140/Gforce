@@ -10,6 +10,7 @@ from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from PyPDF2 import PdfReader
+import openai
 
 openai_api_key = "OPENAI_API_KEY"
 
