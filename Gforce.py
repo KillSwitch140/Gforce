@@ -11,8 +11,11 @@ from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from PyPDF2 import PdfReader
 import openai
+import spacy
+import subprocess
 
-openai_api_key = "OPENAI_API_KEY"
+# Set up your OpenAI API key
+openai_api_key = st.secrets["OPENAI_API_KEY"]
 
 def read_pdf_text(uploaded_file):
     pdf_reader = PyPDF2.PdfReader(uploaded_file)
@@ -29,6 +32,7 @@ st.title('GForce Resume Reader')
 
 # List to store uploaded resume contents
 uploaded_resumes = []
+
 # File upload
 uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
 
@@ -67,6 +71,7 @@ if send_user_query:
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': assistant_response})
 
+
 # Chat UI with sticky headers and input prompt
 st.markdown("""
 <style>
@@ -79,7 +84,7 @@ st.markdown("""
         justify-content: flex-start;
     }
     .user-bubble > div {
-        padding: 15px;
+        padding: 5px;
         background-color: #e0e0e0;
         border-radius: 10px;
         width: 50%;
