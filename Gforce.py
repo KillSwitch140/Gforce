@@ -46,7 +46,7 @@ def extract_experience(text):
 
 # Function to extract candidate name using GPT-3.5-turbo model
 def extract_candidate_name(resume_text):
-    prompt = f"Please provide your full name:"
+    prompt = f"What is current candidate's name:"
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
