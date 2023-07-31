@@ -92,7 +92,7 @@ if uploaded_files:
 
 # Display extracted information for each candidate
 if candidates_info:
-    st.subheader('Extracted Information for Each Candidate:')
+    st.subheader('Candidate Info:')
     for candidate_info in candidates_info:
         st.markdown(f'**{candidate_info["name"]}:**')
         st.markdown(f'- GPA: {candidate_info["gpa"]}')
