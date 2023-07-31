@@ -41,40 +41,27 @@ def extract_email(text):
 # Function to extract past experience using GPT-3's prompt
 def extract_experience(resume_text):
     prompt = f"Please provide your past experience:"
-    response = openai.Completion.create(
+    response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        prompt=prompt,
-        temperature=0,
-        max_tokens=150,
-        stop=["\n"],
-        api_key=openai_api_key,
-        n=1,
         messages=[
             {"role": "system", "content": prompt},
             {"role": "user", "content": resume_text},
-        ]
+        ],
+        api_key=openai_api_key
     )
-    experience = response['choices'][0]['text'].strip()
+    experience = response['choices'][0]['message']['content'].strip()
     return experience
 
-# Function to extract candidate name using GPT-3.5-turbo model
+# Function to extract candidate name using GPT-3's prompt
 def extract_candidate_name(resume_text):
     prompt = f"Please provide your full name:"
-    response = openai.Completion.create(
+    response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
-        prompt=prompt,
-        temperature=0,
-        max_tokens=100,
-        stop=["\n"],
-        api_key=openai_api_key,
-        n=1,
         messages=[
             {"role": "system", "content": prompt},
             {"role": "user", "content": resume_text},
-        ]
-    )
-    candidate_name = response['choices'][0]['text'].strip()
-    return candidate_name
+        ],
+        api_key=openai_api_key
 
 # Page title and styling
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
