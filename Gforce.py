@@ -78,8 +78,6 @@ candidates_info = []
 # File upload
 uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
 
-# Process uploaded resumes
-# Process uploaded resumes
 if uploaded_files:
     for uploaded_file in uploaded_files:
         if uploaded_file is not None:
@@ -88,15 +86,16 @@ if uploaded_files:
             # Extract GPA, email, and past experience
             gpa = extract_gpa(resume_text)
             email = extract_email(resume_text)
-            experience = extract_experience(resume_text)
-            # Extract candidate name using GPT-3's prompt
+            # Extract candidate name using GPT-3's prompt with a limited length
             candidate_name = extract_candidate_name(resume_text)
+            # Extract past experience summary using GPT-3's prompt with summarization
+            experience_summary = extract_experience_summary(resume_text)
             # Store the information for each candidate
             candidate_info = {
                 'name': candidate_name,
                 'gpa': gpa,
                 'email': email,
-                'experience': experience,
+                'experience_summary': experience_summary,
             }
             candidates_info.append(candidate_info)
 
