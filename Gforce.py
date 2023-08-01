@@ -69,13 +69,11 @@ if uploaded_files:
         if uploaded_file is not None:
             resume_text = read_pdf_text(uploaded_file)
             uploaded_resumes.append(resume_text)
-            # Extract GPA, email, and past experience
+            # Extract GPA, email, and past 
             gpa = extract_gpa(resume_text)
             email = extract_email(resume_text)
             # Extract candidate name using GPT-3's prompt with a limited length
             candidate_name = extract_candidate_name(resume_text)
-            # Extract past experience using GPT-3's prompt
-            experience = extract_experience(resume_text)
             # Store the information for each candidate
             candidate_info = {
                 'name': candidate_name,
