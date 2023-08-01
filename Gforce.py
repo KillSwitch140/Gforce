@@ -84,7 +84,7 @@ if uploaded_files:
 
 # Display extracted information for each candidate in the sidebar
 if candidates_info:
-    st.sidebar.subheader('Candidates Information:')
+    st.sidebar.subheader('Candidates Info:')
     for idx, candidate_info in enumerate(candidates_info):
         st.sidebar.markdown(f'<h3 style="margin-bottom:0">{f"Candidate {idx+1}"}</h3>', unsafe_allow_html=True)
         st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">Name:</div><div>{candidate_info["name"]}</div></div>', unsafe_allow_html=True)
