@@ -40,15 +40,16 @@ def extract_email(text):
 
 # Function to extract past experience using GPT-3's prompt
 def extract_experience(resume_text):
-    prompt = f"What is candidates past experience in 700 characters or less?"
+    prompt = f"Please provide your past experience:"
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": prompt},
             {"role": "user", "content": resume_text},
         ],
-        api_key=openai_api_key
-        max_tokens=75
+        api_key=openai_api_key,
+        temperature=0.0  # Adjust the temperature to control the length of the response
+        max_tokenn= 75
     )
     experience = response['choices'][0]['message']['content'].strip()
     return experience
