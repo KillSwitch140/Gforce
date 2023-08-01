@@ -48,6 +48,7 @@ def extract_experience(resume_text):
             {"role": "user", "content": resume_text},
         ],
         api_key=openai_api_key
+        max_tokens=75
     )
     experience = response['choices'][0]['message']['content'].strip()
     return experience
