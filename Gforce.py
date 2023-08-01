@@ -64,6 +64,8 @@ def extract_candidate_name(resume_text):
             break
     return candidate_name
 
+
+
 # Page title and styling
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
 st.title('GForce Resume Reader')
@@ -124,7 +126,7 @@ if send_user_query:
             # Get the updated conversation history
             conversation_history = st.session_state.conversation_history.copy()
             # Append the uploaded resumes' content to the conversation history
-            conversation_history.extend([{'role': 'system', 'content': resume_text} for resume_text in uploaded_resumes])
+            conversation_history.extend([{'role': 'system', 'content': f"Please review the resume and provide your decision:\n{candidate['resume_text']}"} for candidate in candidates_info])
             # Generate the response using the updated conversation history
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
@@ -134,9 +136,8 @@ if send_user_query:
             # Get the assistant's response
             assistant_response = response['choices'][0]['message']['content']
             # Append the assistant's response to the conversation history
-            st.session_state.conversation_history.append({'role': 'assistant', 'content': assistant_response})
-
-
+            st.session_state.conversation
+            
 # Chat UI with sticky headers and input prompt
 st.markdown("""
 <style>
