@@ -41,7 +41,7 @@ def extract_email(text):
 
 # Function to extract past experience using GPT-3's prompt
 def extract_experience(resume_text):
-    prompt = f"Extract and list past professional experiences"
+    prompt = f"Extract and summarize past relevant professional experiences in 300 characters "
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
@@ -55,7 +55,7 @@ def extract_experience(resume_text):
 
 
 # Function to extract candidate name using spaCy NER
-def extract_candidate_name(resume_text):
+def extract_candidate_name(resume_text,max_length=35):
     nlp = spacy.load("en_core_web_sm")
     doc = nlp(resume_text)
     candidate_name = None
