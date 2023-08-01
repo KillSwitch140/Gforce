@@ -55,6 +55,25 @@ def extract_candidate_name(resume_text):
             break
     return candidate_name
 
+def extract_previous_companies_ner(resume_text):
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(resume_text)
+    previous_companies = []
+    for ent in doc.ents:
+        if ent.label_ == "ORG":
+            previous_companies.append(ent.text)
+    return previous_companies
+
+# Function to extract schools using spaCy NER
+def extract_schools_ner(resume_text):
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(resume_text)
+    schools = []
+    for ent in doc.ents:
+        if ent.label_ == "ORG" and "school" in ent.text.lower():
+            schools.append(ent.text)
+    return schools
+
 # Page title and styling
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
 st.title('GForce Resume Reader')
@@ -75,13 +94,19 @@ if uploaded_files:
             # Extract GPA, email, and past experience
             gpa = extract_gpa(resume_text)
             email = extract_email(resume_text)
-            # Extract candidate name using GPT-3.5-turbo model
+            # Extract candidate name using spaCy NER
             candidate_name = extract_candidate_name(resume_text)
+            # Extract previous companies using spaCy NER
+            previous_companies = extract_previous_companies_ner(resume_text)
+            # Extract schools using spaCy NER
+            schools = extract_schools_ner(resume_text)
             # Store the information for each candidate
             candidate_info = {
                 'name': candidate_name,
                 'gpa': gpa,
                 'email': email,
+                'previous_companies': previous_companies,
+                'schools': schools,
             }
             candidates_info.append(candidate_info)
 # Display extracted information for each candidate in the sidebar
@@ -92,6 +117,8 @@ if candidates_info:
         st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">Name:</div><div>{candidate_info["name"]}</div></div>', unsafe_allow_html=True)
         st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">GPA:</div><div>{candidate_info["gpa"]}</div></div>', unsafe_allow_html=True)
         st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">Email:</div><div>{candidate_info["email"]}</div></div>', unsafe_allow_html=True)
+        st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">Previous Companies:</div><div>{", ".join(candidate_info["previous_companies"])}</div></div>', unsafe_allow_html=True)
+        st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">Schools:</div><div>{", ".join(candidate_info["schools"])}</div></div>', unsafe_allow_html=True)
 # User query
 user_query = st.text_area('You (Type your message here):', value='', help='Ask away!', height=100, key="user_input")
 
