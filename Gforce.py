@@ -95,7 +95,7 @@ if candidates_info:
         with col2:
             st.write(candidate_info["name"])
             st.write(candidate_info["email"])
-             st.write(candidate_info["gpa"])
+            st.write(candidate_info["gpa"])
        
 # Retrieve or initialize conversation history using SessionState
 if 'conversation_history' not in st.session_state:
