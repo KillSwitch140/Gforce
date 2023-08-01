@@ -18,9 +18,6 @@ def create_resumes_table(connection):
                 name TEXT,
                 gpa REAL,
                 email TEXT,
-                experience TEXT,
-                previous_companies TEXT,
-                schools TEXT,
                 resume_text TEXT
             );
         """
@@ -35,7 +32,7 @@ def create_resumes_table(connection):
 # Function to store resume and information in the database
 def insert_resume(connection, candidate_info):
     insert_query = """
-        INSERT INTO resumes (name, gpa, email, experience, previous_companies, schools, resume_text)
+        INSERT INTO resumes (name, gpa, email, resume_text)
         VALUES (?, ?, ?, ?, ?, ?, ?);
     """
     cursor = connection.cursor()
@@ -43,9 +40,6 @@ def insert_resume(connection, candidate_info):
         candidate_info["name"],
         candidate_info["gpa"],
         candidate_info["email"],
-        candidate_info["experience"],
-        ", ".join(candidate_info["previous_companies"]),
-        ", ".join(candidate_info["schools"]),
         candidate_info["resume_text"]
     ))
     connection.commit()
