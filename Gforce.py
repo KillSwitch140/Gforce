@@ -40,7 +40,9 @@ def extract_email(text):
     email_match = re.search(email_pattern, text)
     return email_match.group() if email_match else None
 
-
+# Initialize conversation history in session state
+if "conversation_history" not in st.session_state:
+    st.session_state.conversation_history = []
 
 # Function to extract candidate name using spaCy NER
 def extract_candidate_name(resume_text):
