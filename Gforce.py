@@ -118,7 +118,7 @@ def generate_response(openai_api_key, query_text, candidates_info):
             resume_text = candidate_info["resume_text"]
             # Summarize each resume text to fit within the token limit
             max_tokens = 4096  # Adjust this token limit as needed
-            summarized_resume_text = summarize_text(resume_text, max_tokens)
+            summarized_resume_text = summarize_text(resume_text)
             candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
 
             # Append the summarized resume text to the conversation history
