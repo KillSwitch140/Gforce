@@ -50,8 +50,8 @@ def extract_experience(resume_text,max_token=25):
         ],
         api_key=openai_api_key,
     )
-    experience = response['choices'][0]['message']['content'].strip()
-    return experience
+   experience_summary = response['choices'][0]['message']['content'].strip()
+    return experience_summary
 
 
 # Function to extract candidate name using spaCy NER
