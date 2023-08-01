@@ -40,7 +40,7 @@ def extract_email(text):
     return email_match.group() if email_match else None
 
 # Function to extract past experience using GPT-3's prompt
-def extract_experience(resume_text,max_token=60):
+def extract_experience(resume_text,max_token=40):
     prompt = f"Give a one line brief about this candidate "
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
