@@ -13,7 +13,7 @@ from PyPDF2 import PdfReader
 import openai
 import re
 import spacy
-import tiktoken
+
 
 # Set up your OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
