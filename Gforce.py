@@ -48,7 +48,7 @@ def extract_experience(resume_text):
             {"role": "user", "content": resume_text},
         ],
         api_key=openai_api_key,
-        temperature=0.0  # Adjust the temperature to control the length of the response
+        temperature=0.0,  # Adjust the temperature to control the length of the response
         max_tokenn= 75
     )
     experience = response['choices'][0]['message']['content'].strip()
