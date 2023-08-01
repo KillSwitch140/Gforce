@@ -86,17 +86,14 @@ if uploaded_files:
 if candidates_info:
     st.sidebar.subheader('Candidates Information:')
     for idx, candidate_info in enumerate(candidates_info):
-        col1, col2 = st.sidebar.columns([3, 3])
-        with col1:
-            st.markdown(f'**Candidate {idx+1} Name:**')
-            st.markdown(f'**Candidate {idx+1} Email:**')
-            st.markdown(f'**Candidate {idx+1} GPA:**')
-           
-        with col2:
-            st.write(candidate_info["name"])
-            st.write(candidate_info["email"])
-            st.write(candidate_info["gpa"])
-       
+        st.sidebar.markdown(f'**Candidate {idx+1}**')
+        with st.sidebar:
+            st.markdown(f'**Name:** {candidate_info["name"]}')
+            st.markdown(f'**Email:** {candidate_info["email"]}')
+            st.markdown(f'**GPA:** {candidate_info["gpa"]}')
+            st.markdown(f'**Past Experience:**')
+            st.write(candidate_info["experience"])
+
 # Retrieve or initialize conversation history using SessionState
 if 'conversation_history' not in st.session_state:
     st.session_state.conversation_history = []
