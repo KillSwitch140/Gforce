@@ -144,9 +144,16 @@ def generate_response(openai_api_key, query_text, candidates_info):
         # Process each resume separately and store the summaries in candidates_info
         for idx, candidate_info in enumerate(candidates_info):
             resume_text = candidate_info["resume_text"]
-            # Summarize each resume text
+            # Split the resume text into chunks to fit the BERT token limit
+            max_chunk_length = 512  # Adjust this length as needed
+            chunks = [resume_text[i:i + max_chunk_length] for i in range(0, len(resume_text), max_chunk_length)]
+
+            # Summarize each chunk separately
             max_summary_length = 200  # Adjust this length as needed
-            summarized_resume_text = bert_summarize(resume_text, max_summary_length)
+            summarized_chunks = [bert_summarize(chunk, max_summary_length) for chunk in chunks]
+
+            # Concatenate the summarized chunks
+            summarized_resume_text = " ".join(summarized_chunks)
             candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
 
             # Append the summarized resume text to the conversation history
@@ -164,6 +171,7 @@ def generate_response(openai_api_key, query_text, candidates_info):
 
     else:
         return "Sorry, no resumes found in the database. Please upload resumes first."
+
 
 
 # User query
