@@ -12,7 +12,7 @@ from langchain.chains import RetrievalQA
 from PyPDF2 import PdfReader
 import openai
 import re
-
+import spacy
 
 # Set up your OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
@@ -52,18 +52,16 @@ def extract_experience(resume_text):
     experience = response['choices'][0]['message']['content'].strip()
     return experience
 
-# Function to extract candidate name using GPT-3's prompt
-def extract_candidate_name(resume_text,max_length=40):
-    prompt = f"Extract the name"
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": resume_text},
-        ],
-        api_key=openai_api_key
-        )
-    candidate_name = response['choices'][0]['message']['content'].strip()
+
+# Function to extract candidate name using spaCy NER
+def extract_candidate_name(resume_text):
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(resume_text)
+    candidate_name = None
+    for ent in doc.ents:
+        if ent.label_ == "PERSON":
+            candidate_name = ent.text
+            break
     return candidate_name
 
 # Page title and styling
