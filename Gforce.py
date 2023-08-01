@@ -166,7 +166,7 @@ st.markdown("""
     }
     .assistant-bubble > div {
         padding: 15px;
-        background-color: #0078d4;
+        background-color: #bb86fc;
         color: white;
         border-radius: 10px;
         width: 50%;
