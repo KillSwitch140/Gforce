@@ -33,7 +33,7 @@ def create_resumes_table(connection):
 def insert_resume(connection, candidate_info):
     insert_query = """
         INSERT INTO resumes (name, gpa, email, resume_text)
-        VALUES (?, ?, ?, ?, ?, ?, ?);
+        VALUES (?, ?, ?, ?);
     """
     cursor = connection.cursor()
     cursor.execute(insert_query, (
