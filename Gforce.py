@@ -80,7 +80,7 @@ if uploaded_files:
         if uploaded_file is not None:
             resume_text = read_pdf_text(uploaded_file)
             uploaded_resumes.append(resume_text)
-            # Extract GPA, email, and past experience
+            # Extract GPA, email, and past
             gpa = extract_gpa(resume_text)
             email = extract_email(resume_text)
             # Extract candidate name using spaCy NER
