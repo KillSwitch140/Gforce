@@ -116,7 +116,6 @@ if send_user_query:
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': assistant_response})
 
-
 # Chat UI with sticky headers and input prompt
 st.markdown("""
 <style>
