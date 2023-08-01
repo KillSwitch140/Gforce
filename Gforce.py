@@ -96,7 +96,7 @@ if candidates_info:
 # User query
 user_query = st.text_area('You (Type your message here):', value='', help='Ask away!', height=100, key="user_input")
 
-#form and input query
+# Form input and query
 send_user_query = st.button('Send', help='Click to submit the query', key="send_user_query")
 if send_user_query:
     if user_query.strip() != '':
@@ -117,7 +117,8 @@ if send_user_query:
             assistant_response = response['choices'][0]['message']['content']
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': assistant_response})
-            
+
+
 # Chat UI with sticky headers and input prompt
 st.markdown("""
 <style>
@@ -142,7 +143,7 @@ st.markdown("""
     }
     .assistant-bubble > div {
         padding: 15px;
-        background-color: #bb86fc;
+        background-color: #0078d4;
         color: white;
         border-radius: 10px;
         width: 50%;
