@@ -39,23 +39,8 @@ def extract_email(text):
     email_match = re.search(email_pattern, text)
     return email_match.group() if email_match else None
 
-# Function to extract past experience using GPT-3's prompt
-def extract_experience(resume_text,max_token=25):
-    prompt = f"Give brief of the candidate in one line"
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": resume_text},
-        ],
-        api_key=openai_api_key
-    )
-    experience = response['choices'][0]['message']['content'].strip()
-    return experience
-
-
 # Function to extract candidate name using spaCy NER
-def extract_candidate_name(resume_text,max_length=35):
+def extract_candidate_name(resume_text,max_length=50):
     nlp = spacy.load("en_core_web_sm")
     doc = nlp(resume_text)
     candidate_name = None
@@ -96,7 +81,6 @@ if uploaded_files:
                 'name': candidate_name,
                 'gpa': gpa,
                 'email': email,
-                'experience': experience,
             }
             candidates_info.append(candidate_info)
 
@@ -104,14 +88,15 @@ if uploaded_files:
 if candidates_info:
     st.sidebar.subheader('Candidates Information:')
     for idx, candidate_info in enumerate(candidates_info):
-        st.sidebar.markdown(f'**Candidate {idx+1} Name:**')
-        st.sidebar.write(candidate_info["name"])
-        st.sidebar.markdown(f'**Candidate {idx+1} GPA:**')
-        st.sidebar.write(candidate_info["gpa"])
-        st.sidebar.markdown(f'**Candidate {idx+1} Email:**')
-        st.sidebar.write(candidate_info["email"])
-        st.sidebar.markdown(f'**Candidate {idx+1} Past Experience:**')
-        st.sidebar.write(candidate_info["experience"])
+        col1, col2 = st.sidebar.beta_columns(2)
+        with col1:
+            st.markdown(f'**Candidate {idx+1} Name:**')
+            st.write(candidate_info["name"])
+            st.markdown(f'**Candidate {idx+1} GPA:**')
+            st.write(candidate_info["gpa"])
+        with col2:
+            st.markdown(f'**Candidate {idx+1} Email:**')
+            st.write(candidate_info["email"])
        
 # Retrieve or initialize conversation history using SessionState
 if 'conversation_history' not in st.session_state:
