@@ -100,15 +100,18 @@ if uploaded_files:
             }
             candidates_info.append(candidate_info)
 
-# Display extracted information for each candidate
+# Display extracted information for each candidate in the sidebar
 if candidates_info:
-    st.subheader('Extracted Information for Each Candidate:')
-    for candidate_info in candidates_info:
-        st.markdown(f'**{candidate_info["name"]}:**')
-        st.markdown(f'- GPA: {candidate_info["gpa"]}')
-        st.markdown(f'- Email: {candidate_info["email"]}')
-        st.markdown(f'- Past Experience:')
-        st.write(candidate_info["experience"])
+    st.sidebar.subheader('Candidates Information:')
+    for idx, candidate_info in enumerate(candidates_info):
+        st.sidebar.markdown(f'**Candidate {idx+1} Name:**')
+        st.sidebar.write(candidate_info["name"])
+        st.sidebar.markdown(f'**Candidate {idx+1} GPA:**')
+        st.sidebar.write(candidate_info["gpa"])
+        st.sidebar.markdown(f'**Candidate {idx+1} Email:**')
+        st.sidebar.write(candidate_info["email"])
+        st.sidebar.markdown(f'**Candidate {idx+1} Experience Summary:**')
+        st.sidebar.write(candidate_info["experience_summary"])
        
 # Retrieve or initialize conversation history using SessionState
 if 'conversation_history' not in st.session_state:
