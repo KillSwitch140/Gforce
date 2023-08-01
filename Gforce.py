@@ -96,6 +96,29 @@ if uploaded_files:
             # Store the resume and information in the database
             insert_resume(connection, candidate_info)
 
+
+def generate_response(openai_api_key, query_text, candidates_info):
+    # Load document if file is uploaded
+    if len(candidates_info) > 0:
+        # Append the candidate information to the conversation history
+        conversation_history = [
+            {'role': 'user', 'content': query_text}
+        ] + [{'role': 'system', 'content': f'Resume: {info["resume_text"]}'}
+             for info in candidates_info]
+
+        # Generate the response using the updated conversation history
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=conversation_history,
+            api_key=openai_api_key
+        )
+        # Get the assistant's response
+        assistant_response = response['choices'][0]['message']['content']
+        return assistant_response
+
+    else:
+        return "Sorry, no resumes found in the database. Please upload resumes first."
+
 # User query
 user_query = st.text_area('You (Type your message here):', value='', help='Ask away!', height=100, key="user_input")
 
@@ -104,20 +127,16 @@ send_user_query = st.button('Send', help='Click to submit the query', key="send_
 if send_user_query:
     if user_query.strip() != '':
         with st.spinner('Chatbot is typing...'):
+            # Add the user query to the conversation history
+            st.session_state.conversation_history.append({'role': 'user', 'content': user_query})
             # Get the updated conversation history
             conversation_history = st.session_state.conversation_history.copy()
-            # Append the user query to the conversation history
-            conversation_history.append({'role': 'user', 'content': user_query})
+            # Append the uploaded resumes' content to the conversation history
+            conversation_history.extend([{'role': 'system', 'content': resume_text} for resume_text in uploaded_resumes])
             # Generate the response using the updated conversation history
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",
-                messages=conversation_history,
-                api_key=openai_api_key
-            )
-            # Get the assistant's response
-            assistant_response = response['choices'][0]['message']['content']
+            response = generate_response(openai_api_key, user_query, candidates_info)
             # Append the assistant's response to the conversation history
-            st.session_state.conversation_history.append({'role': 'assistant', 'content': assistant_response})
+            st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
 
 
 # Chat UI with sticky headers and input prompt
