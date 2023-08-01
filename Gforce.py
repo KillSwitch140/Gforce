@@ -18,6 +18,7 @@ import spacy
 # Set up your OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 
+
 def read_pdf_text(uploaded_file):
     pdf_reader = PyPDF2.PdfReader(uploaded_file)
     text = ""
@@ -39,18 +40,17 @@ def extract_email(text):
     email_match = re.search(email_pattern, text)
     return email_match.group() if email_match else None
 
-# Function to extract candidate name using GPT-3's prompt with a limited length
-def extract_candidate_name(resume_text, max_length=50):
-    prompt = f"Please provide your full name:"
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": prompt},
-            {"role": "user", "content": resume_text[:max_length]},
-        ],
-        api_key=openai_api_key
-    )
-    candidate_name = response['choices'][0]['message']['content'].strip()
+
+
+# Function to extract candidate name using spaCy NER
+def extract_candidate_name(resume_text):
+    nlp = spacy.load("en_core_web_sm")
+    doc = nlp(resume_text)
+    candidate_name = None
+    for ent in doc.ents:
+        if ent.label_ == "PERSON":
+            candidate_name = ent.text
+            break
     return candidate_name
 
 # Page title and styling
@@ -73,7 +73,7 @@ if uploaded_files:
             # Extract GPA, email, and past experience
             gpa = extract_gpa(resume_text)
             email = extract_email(resume_text)
-            # Extract candidate name using GPT-3's prompt with a limited length
+            # Extract candidate name using GPT-3.5-turbo model
             candidate_name = extract_candidate_name(resume_text)
             # Store the information for each candidate
             candidate_info = {
@@ -82,7 +82,6 @@ if uploaded_files:
                 'email': email,
             }
             candidates_info.append(candidate_info)
-
 # Display extracted information for each candidate in the sidebar
 if candidates_info:
     st.sidebar.subheader('Candidates Information:')
