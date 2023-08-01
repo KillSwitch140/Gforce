@@ -86,7 +86,7 @@ if uploaded_files:
 if candidates_info:
     st.sidebar.subheader('Candidates Information:')
     for idx, candidate_info in enumerate(candidates_info):
-        col1, col2 = st.sidebar.columns([1, 3])
+        col1, col2 = st.sidebar.columns([3, 3])
         with col1:
             st.markdown(f'**Candidate {idx+1} Name:**')
             st.markdown(f'**Candidate {idx+1} Email:**')
