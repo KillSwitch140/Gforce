@@ -16,7 +16,7 @@ import spacy
 import cohere
 import sqlite3
 from database import create_connection, create_resumes_table, insert_resume, get_all_resumes
-
+from transformers import BertTokenizer, BertModel
 
 # Set up your OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
@@ -99,12 +99,17 @@ if uploaded_files:
             insert_resume(connection, candidate_info)
 
 
-def summarize_text(text):
-    # Use a text summarization model to summarize the text within the specified token limit.
-    co = cohere.Client(cohere_api_key)
-    summarized_text = co.summarize(
-        text=text,
-    )
+# Load the pre-trained BERT model and tokenizer
+bert_model_name = "bert-base-uncased"
+tokenizer = BertTokenizer.from_pretrained(bert_model_name)
+bert_model = BertModel.from_pretrained(bert_model_name)
+
+def bert_summarize(text, max_length=100):
+    # Tokenize the text
+    inputs = tokenizer.encode("summarize: " + text, return_tensors="pt", max_length=512, truncation=True)
+    # Summarize using BERT's model
+    summary_ids = bert_model.generate(inputs, max_length=max_length, min_length=50, length_penalty=2.0, num_beams=4, early_stopping=True)
+    summarized_text = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
     return summarized_text
 
 def generate_response(openai_api_key, query_text, candidates_info):
@@ -116,9 +121,9 @@ def generate_response(openai_api_key, query_text, candidates_info):
         # Process each resume separately and store the summaries in candidates_info
         for idx, candidate_info in enumerate(candidates_info):
             resume_text = candidate_info["resume_text"]
-            # Summarize each resume text to fit within the token limit
-            max_tokens = 4096  # Adjust this token limit as needed
-            summarized_resume_text = summarize_text(resume_text)
+            # Summarize each resume text
+            max_summary_length = 150  # Adjust this length as needed
+            summarized_resume_text = bert_summarize(resume_text, max_summary_length)
             candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
 
             # Append the summarized resume text to the conversation history
