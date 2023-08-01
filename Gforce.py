@@ -16,7 +16,7 @@ import spacy
 import cohere
 import sqlite3
 from database import create_connection, create_resumes_table, insert_resume, get_all_resumes
-from transformers import BertTokenizer, BertModel
+from transformers import BertTokenizer, BertLMHeadModel
 
 # Set up your OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
@@ -99,15 +99,17 @@ if uploaded_files:
             insert_resume(connection, candidate_info)
 
 
+
+
 # Load the pre-trained BERT model and tokenizer
 bert_model_name = "bert-base-uncased"
 tokenizer = BertTokenizer.from_pretrained(bert_model_name)
-bert_model = BertModel.from_pretrained(bert_model_name)
+bert_model = BertLMHeadModel.from_pretrained(bert_model_name)
 
 def bert_summarize(text, max_length=100):
     # Tokenize the text
     inputs = tokenizer.encode("summarize: " + text, return_tensors="pt", max_length=512, truncation=True)
-    # Summarize using BERT's model
+    # Summarize using BERT's language model head
     summary_ids = bert_model.generate(inputs, max_length=max_length, min_length=50, length_penalty=2.0, num_beams=4, early_stopping=True)
     summarized_text = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
     return summarized_text
