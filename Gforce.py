@@ -53,8 +53,8 @@ def extract_experience(resume_text):
     return experience
 
 # Function to extract candidate name using GPT-3's prompt
-def extract_candidate_name(resume_text):
-    prompt = f"What is candidate's name?"
+def extract_candidate_name(resume_text,max_length=40):
+    prompt = f"Extract the name"
     response = openai.ChatCompletion.create(
         model="gpt-3.5-turbo",
         messages=[
