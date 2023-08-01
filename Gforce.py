@@ -87,7 +87,7 @@ uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accep
 
 # Process uploaded resumes
 if uploaded_files:
-    for uploaded_file in uploaded_files:
+    for idx, uploaded_file in enumerate(uploaded_files):
         if uploaded_file is not None:
             resume_text = read_pdf_text(uploaded_file)
             uploaded_resumes.append(resume_text)
@@ -96,29 +96,18 @@ if uploaded_files:
             email = extract_email(resume_text)
             # Extract candidate name using spaCy NER
             candidate_name = extract_candidate_name(resume_text)
-            # Extract previous companies using spaCy NER
-            previous_companies = extract_previous_companies_ner(resume_text)
-            # Extract schools using spaCy NER
-            schools = extract_schools_ner(resume_text)
             # Store the information for each candidate
             candidate_info = {
                 'name': candidate_name,
                 'gpa': gpa,
                 'email': email,
-                'previous_companies': previous_companies,
-                'schools': schools,
             }
             candidates_info.append(candidate_info)
-# Display extracted information for each candidate in the sidebar
-if candidates_info:
-    st.sidebar.subheader('Candidates Information:')
-    for idx, candidate_info in enumerate(candidates_info):
-        st.sidebar.markdown(f'<h3 style="margin-bottom:0">{f"Candidate {idx+1}"}</h3>', unsafe_allow_html=True)
-        st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">Name:</div><div>{candidate_info["name"]}</div></div>', unsafe_allow_html=True)
-        st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">GPA:</div><div>{candidate_info["gpa"]}</div></div>', unsafe_allow_html=True)
-        st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">Email:</div><div>{candidate_info["email"]}</div></div>', unsafe_allow_html=True)
-        st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">Previous Companies:</div><div>{", ".join(candidate_info["previous_companies"])}</div></div>', unsafe_allow_html=True)
-        st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">Schools:</div><div>{", ".join(candidate_info["schools"])}</div></div>', unsafe_allow_html=True)
+
+            # Add context for each candidate using the candidate's name
+            st.session_state.conversation_history.append({'role': 'system', 'content': f"Context for {candidate_name}:"})
+            st.session_state.conversation_history.append({'role': 'user', 'content': resume_text})
+
 # User query
 user_query = st.text_area('You (Type your message here):', value='', help='Ask away!', height=100, key="user_input")
 
@@ -127,12 +116,10 @@ send_user_query = st.button('Send', help='Click to submit the query', key="send_
 if send_user_query:
     if user_query.strip() != '':
         with st.spinner('Chatbot is typing...'):
-            # Add the user query to the conversation history
-            st.session_state.conversation_history.append({'role': 'user', 'content': user_query})
             # Get the updated conversation history
             conversation_history = st.session_state.conversation_history.copy()
-            # Append the uploaded resumes' content to the conversation history
-            conversation_history.extend([{'role': 'system', 'content': resume_text} for resume_text in uploaded_resumes])
+            # Append the user query to the conversation history
+            conversation_history.append({'role': 'user', 'content': user_query})
             # Generate the response using the updated conversation history
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
