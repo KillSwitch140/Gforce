@@ -108,11 +108,32 @@ bert_model = BertLMHeadModel.from_pretrained(bert_model_name)
 
 def bert_summarize(text, max_length=100):
     # Tokenize the text
-    inputs = tokenizer.encode("summarize: " + text, return_tensors="pt", max_length=512, truncation=True)
-    # Summarize using BERT's language model head
-    summary_ids = bert_model.generate(inputs, max_length=max_length, min_length=50, length_penalty=2.0, num_beams=4, early_stopping=True)
+    inputs = tokenizer.batch_encode_plus([text], max_length=512, truncation=True, return_tensors="pt")
+    # Check if input exceeds BERT's token limit and perform chunking if necessary
+    if inputs.input_ids.shape[1] > 512:
+        # Get the total number of tokens in the input
+        total_tokens = inputs.input_ids.shape[1]
+        # Calculate the number of chunks required
+        num_chunks = (total_tokens // 512) + 1
+        # Split the input into chunks
+        chunk_size = total_tokens // num_chunks
+        chunks = [inputs.input_ids[:, i * chunk_size:(i + 1) * chunk_size] for i in range(num_chunks)]
+        # Summarize each chunk separately
+        summaries = [bert_summarize_chunk(chunk, max_length) for chunk in chunks]
+        # Concatenate the summarized chunks
+        summarized_text = " ".join(summaries)
+    else:
+        # Summarize using BERT's language model head
+        summary_ids = bert_model.generate(inputs.input_ids, max_length=max_length, min_length=50, length_penalty=2.0, num_beams=4, early_stopping=True)
+        summarized_text = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+    return summarized_text
+
+def bert_summarize_chunk(chunk_input_ids, max_length=100):
+    # Summarize using BERT's language model head for a chunk
+    summary_ids = bert_model.generate(chunk_input_ids, max_length=max_length, min_length=50, length_penalty=2.0, num_beams=4, early_stopping=True)
     summarized_text = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
     return summarized_text
+
 
 def generate_response(openai_api_key, query_text, candidates_info):
     # Load document if file is uploaded
@@ -124,7 +145,7 @@ def generate_response(openai_api_key, query_text, candidates_info):
         for idx, candidate_info in enumerate(candidates_info):
             resume_text = candidate_info["resume_text"]
             # Summarize each resume text
-            max_summary_length = 150  # Adjust this length as needed
+            max_summary_length = 200  # Adjust this length as needed
             summarized_resume_text = bert_summarize(resume_text, max_summary_length)
             candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
 
