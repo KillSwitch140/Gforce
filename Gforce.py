@@ -78,6 +78,7 @@ candidates_info = []
 # File upload
 uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
 
+# Process uploaded resumes
 if uploaded_files:
     for uploaded_file in uploaded_files:
         if uploaded_file is not None:
@@ -88,14 +89,14 @@ if uploaded_files:
             email = extract_email(resume_text)
             # Extract candidate name using GPT-3's prompt with a limited length
             candidate_name = extract_candidate_name(resume_text)
-            # Extract past experience summary using GPT-3's prompt with summarization
-            experience_summary = extract_experience_summary(resume_text)
+            # Extract past experience using GPT-3's prompt
+            experience = extract_experience(resume_text)
             # Store the information for each candidate
             candidate_info = {
                 'name': candidate_name,
                 'gpa': gpa,
                 'email': email,
-                'experience_summary': experience_summary,
+                'experience': experience,
             }
             candidates_info.append(candidate_info)
 
@@ -109,8 +110,8 @@ if candidates_info:
         st.sidebar.write(candidate_info["gpa"])
         st.sidebar.markdown(f'**Candidate {idx+1} Email:**')
         st.sidebar.write(candidate_info["email"])
-        st.sidebar.markdown(f'**Candidate {idx+1} Experience Summary:**')
-        st.sidebar.write(candidate_info["experience_summary"])
+        st.sidebar.markdown(f'**Candidate {idx+1} Past Experience:**')
+        st.sidebar.write(candidate_info["experience"])
        
 # Retrieve or initialize conversation history using SessionState
 if 'conversation_history' not in st.session_state:
