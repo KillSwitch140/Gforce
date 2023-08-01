@@ -86,17 +86,11 @@ if uploaded_files:
 if candidates_info:
     st.sidebar.subheader('Candidates Information:')
     for idx, candidate_info in enumerate(candidates_info):
-        st.sidebar.markdown(f'**Candidate {idx+1}**')
-        with st.sidebar:
-            st.markdown(f'**Name:** {candidate_info["name"]}')
-            st.markdown(f'**Email:** {candidate_info["email"]}')
-            st.markdown(f'**GPA:** {candidate_info["gpa"]}')
-            st.markdown(f'**Past Experience:**')
-            st.write(candidate_info["experience"])
-
-# Retrieve or initialize conversation history using SessionState
-if 'conversation_history' not in st.session_state:
-    st.session_state.conversation_history = []
+        st.sidebar.markdown(f'<h3 style="margin-bottom:0">{f"Candidate {idx+1}"}</h3>', unsafe_allow_html=True)
+        st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">Name:</div><div>{candidate_info["name"]}</div></div>', unsafe_allow_html=True)
+        st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">GPA:</div><div>{candidate_info["gpa"]}</div></div>', unsafe_allow_html=True)
+        st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">Email:</div><div>{candidate_info["email"]}</div></div>', unsafe_allow_html=True)
+        st.sidebar.markdown(f'<div style="display:flex"><div style="width: 100px; font-weight: bold;">Past Experience:</div><div>{candidate_info["experience"]}</div></div>', unsafe_allow_html=True)
 
 # User query
 user_query = st.text_area('You (Type your message here):', value='', help='Ask away!', height=100, key="user_input")
