@@ -77,8 +77,6 @@ qualifications = st.sidebar.text_area("Enter the qualifications for the job (sep
 st.sidebar.write(f'Job Title: {job_title}')
 st.sidebar.write(f'Qualifications: {", ".join(qualifications)}')
 
-# Add a button to trigger candidate selection
-select_candidates = st.sidebar.button('Select Candidates', key="select_candidates")
 
 def summarize_text(text):
     # Use a text summarization model to summarize the text within the specified token limit.
