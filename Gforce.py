@@ -54,13 +54,25 @@ if "conversation_history" not in st.session_state:
 
 # Function to extract candidate name using spaCy NER
 def extract_candidate_name(resume_text):
+    # Assume the candidate name is in the first line of the resume text
+    first_line = resume_text.strip().split('\n')[0]
+    
+    # Initialize spaCy NER model
     nlp = spacy.load("en_core_web_sm")
-    doc = nlp(resume_text)
+    
+    # Process the first line with spaCy NER
+    doc = nlp(first_line)
     candidate_name = None
+    
     for ent in doc.ents:
         if ent.label_ == "PERSON":
             candidate_name = ent.text
             break
+
+    # If spaCy NER did not find a PERSON entity in the first line, use the entire first line as the candidate name
+    if not candidate_name:
+        candidate_name = first_line.strip()
+        
     return candidate_name
 
 # Page title and styling
