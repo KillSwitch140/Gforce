@@ -70,14 +70,14 @@ candidates_info = []
 # File upload
 uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
 
-# User input for job details
-st.sidebar.header('Job Details')
+# Ask the user for job details as soon as they upload resumes
 job_title = st.sidebar.text_input("Enter the job title:")
-qualifications = st.sidebar.text_area("Enter the qualifications for the job (separated by commas):").split(",")
+qualifications = st.sidebar.text_area("Enter the qualifications for the job (separated by commas):")
 
 # Display job details in the sidebar
+st.sidebar.header('Job Details')
 st.sidebar.write(f'Job Title: {job_title}')
-st.sidebar.write(f'Qualifications: {", ".join(qualifications)}')
+st.sidebar.write(f'Qualifications: {qualifications}')
 
 def generate_response(openai_api_key, query_text, candidates_info):
     # Load document if file is uploaded
