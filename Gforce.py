@@ -32,7 +32,9 @@ def extract_email(text):
 
 # Initialize conversation history in session state
 if "conversation_history" not in st.session_state:
-    st.session_state.conversation_history = []
+    st.session_state.conversation_history = [
+        {'role': 'system', 'content': 'Hello! I am your recruiter assistant. My role is to go through resumes and help recruiters make informed decisions.'}
+    ]
 
 # Function to extract candidate name using spaCy NER
 def extract_candidate_name(resume_text):
