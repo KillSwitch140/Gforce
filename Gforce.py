@@ -108,7 +108,7 @@ def generate_response(openai_api_key, job_title, qualifications, user_query, can
         conversation_history = [
             {'role': 'system', 'content': 'Hello! I am your recruiter assistant. My role is to go through resumes and help recruiters make informed decisions.'},
             {'role': 'user', 'content': user_query},
-            {'role': 'system', 'content': f'You are looking for candidates for the position of {job_title} with qualifications in {qualifications}. Please recommend the top candidates.'}
+            {'role': 'system', 'content': f'You are looking for candidates for the position of {job_title} with qualifications in {qualifications}. How can I assist you?'}
         ]
 
         # Process resumes and store the summaries in candidates_info
@@ -142,6 +142,7 @@ if send_user_query:
             response = generate_response(openai_api_key, job_title, qualifications, user_query, candidates_info)
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
+
 
 # Chat UI with sticky headers and input prompt
 st.markdown("""
