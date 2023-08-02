@@ -98,23 +98,19 @@ if uploaded_files:
 
 
 def summarize_text_batch(texts):
-    # Use a text summarization model to summarize the text within the specified token limit.
-    co = cohere.Client(cohere_api_key)
+    # Use GPT-3.5-turbo for text summarization in batches
+    openai.api_key = openai_api_key
     batch_size = 4  # You can adjust this batch size as needed
     summarized_texts = []
 
     for i in range(0, len(texts), batch_size):
         batch_texts = texts[i:i + batch_size]
-        batch_summaries = co.summarize_batch(
-            model='summarize-xlarge', 
-            length='long',
-            extractiveness='high',
-            format='paragraph',
-            temperature=0.2,
-            additional_command='Generate a summary for this resume',
-            texts=batch_texts
+        batch_summaries = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "system", "content": "Generate a summary for this resume"} for _ in batch_texts],
+            api_key=openai.api_key
         )
-        summarized_texts.extend(batch_summaries)
+        summarized_texts.extend([summary['choices'][0]['message']['content'] for summary in batch_summaries['choices']])
 
     return summarized_texts
 
