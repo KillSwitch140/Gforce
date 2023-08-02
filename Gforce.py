@@ -108,9 +108,10 @@ def summarize_text_batch(texts):
         batch_summaries = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "system", "content": "Generate a summary for this resume"} for _ in batch_texts],
-            api_key=openai.api_key
+            api_key=openai.api_key,
+            chat_completions=1  # Set to 1 to get a single completion per message
         )
-        summarized_texts.extend([summary['choices'][0]['message']['content'] for summary in batch_summaries['choices']])
+        summarized_texts.extend([summary['choices'][0]['message']['content'] for summary in batch_summaries['data']])
 
     return summarized_texts
 
