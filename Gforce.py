@@ -120,7 +120,8 @@ def summarize_text(text):
     )
     return summarized_text['choices'][0]['message']['content']
 
-# Load document if file is uploaded
+def generate_response(openai_api_key, query_text, candidates_info):
+    # Load document if file is uploaded
     if len(candidates_info) > 0:
         # Prepare the conversation history with user query
         conversation_history = [{'role': 'user', 'content': query_text}]
