@@ -80,35 +80,62 @@ st.sidebar.write(f'Qualifications: {", ".join(qualifications)}')
 # Add a button to trigger candidate selection
 select_candidates = st.sidebar.button('Select Candidates', key="select_candidates")
 
-# Function to generate assistant response
-def generate_response(api_key, query_text, job_title, qualifications, candidates_info):
-    # Prepare the conversation history with system message introducing the bot's role
-    conversation_history = [
-        {'role': 'system', 'content': 'Hello! I am your recruiter assistant. My role is to go through resumes and help recruiters make informed decisions.'},
-        {'role': 'user', 'content': query_text}
-    ]
-
-    # Process resumes and store the summaries in candidates_info
-    for idx, candidate_info in enumerate(candidates_info):
-        resume_text = candidate_info["resume_text"]
-        conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {resume_text}'})
-    
-    # Check if the user query is related to selecting candidates based on qualifications
-    if "select_candidates" in query_text:
-        # Add a prompt for selecting candidates based on qualifications
-        prompt = "Based on the qualifications you provided, please recommend the top candidates."
-        conversation_history.append({'role': 'user', 'content': prompt})
-
-    # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
-    response = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=conversation_history,
-        api_key=api_key
+def summarize_text(text):
+    # Use a text summarization model to summarize the text within the specified token limit.
+    co = cohere.Client(cohere_api_key)
+    summarized_text = co.summarize(
+        model='summarize-xlarge', 
+        length='long',
+        extractiveness='high',
+        format='paragraph',
+        temperature= 0.2,
+        additional_command = 'Generate a summary for this resume',
+        text= text
     )
+    return summarized_text
 
-    # Get the assistant's response
-    assistant_response = response['choices'][0]['message']['content']
-    return assistant_response
+def generate_response(openai_api_key, query_text, candidates_info):
+    # Load document if file is uploaded
+    if len(candidates_info) > 0:
+        # Prepare the conversation history with user query
+        conversation_history = [{'role': 'user', 'content': query_text}]
+
+        # Process each resume separately and store the summaries in candidates_info
+        for idx, candidate_info in enumerate(candidates_info):
+            resume_text = candidate_info["resume_text"]
+            # Summarize each resume text to fit within the token limit
+            max_tokens = 4096  # Adjust this token limit as needed
+            summarized_resume_text = summarize_text(resume_text)
+            candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
+
+            # Append the summarized resume text to the conversation history
+            conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {summarized_resume_text}'})
+
+       # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
+        recruiter_prompts = {
+            "compare_candidates": "Please compare the candidates based on their qualifications and experience.",
+            "top_candidates": "Can you suggest the top candidates for the position based on if they possess a minimum of 3 years of experience in Linux, React, MVP, etc. Or similar qualifications",
+            "identify_strengths": "Identify the strengths of each candidate and their suitability for the role.",
+            "evaluate_experience": "Evaluate the past experiences of the candidates and their relevance to the job.",
+        }
+
+        # Add a prompt for the specific query provided by the user
+        if query_text in recruiter_prompts:
+            conversation_history.append({'role': 'user', 'content': recruiter_prompts[query_text]})
+
+        # Generate the response using the updated conversation history
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=conversation_history,
+            api_key=openai_api_key
+        )
+        # Get the assistant's response
+        assistant_response = response['choices'][0]['message']['content']
+        return assistant_response
+
+    else:
+        return "Sorry, no resumes found in the database. Please upload resumes first."
+
 
 # User query
 user_query = st.text_area('You (Type your message here):', value='', help='Ask away!', height=100, key="user_input")
@@ -120,33 +147,14 @@ if send_user_query:
         with st.spinner('Chatbot is typing...'):
             # Add the user query to the conversation history
             st.session_state.conversation_history.append({'role': 'user', 'content': user_query})
-            
-            # Check if the bot needs to ask the qualification question
-            if len(candidates_info) > 0 and not any("Based on the qualifications" in message["content"] for message in st.session_state.conversation_history):
-                # Add the qualification question to the conversation history
-                if job_title and qualifications:
-                    qualifications_str = ", ".join(qualifications)
-                    st.session_state.conversation_history.append({'role': 'system', 'content': f'Great! You are looking for candidates for the position of {job_title} with qualifications in {qualifications_str}. How can I assist you?'})
-                else:
-                    st.session_state.conversation_history.append({'role': 'system', 'content': 'What qualifications are you looking for in a candidate?'})
-            
             # Get the updated conversation history
             conversation_history = st.session_state.conversation_history.copy()
             # Append the uploaded resumes' content to the conversation history
             conversation_history.extend([{'role': 'system', 'content': resume_text} for resume_text in uploaded_resumes])
             # Generate the response using the updated conversation history
-            response = generate_response(openai_api_key, user_query, job_title, qualifications, candidates_info)
+            response = generate_response(openai_api_key, user_query, candidates_info)
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
-
-# Check if the user clicked the "Select Candidates" button
-if select_candidates:
-    with st.spinner('Selecting candidates...'):
-        # Generate the response for candidate selection based on the job title and qualifications
-        select_candidates_query = "select_candidates"
-        response = generate_response(openai_api_key, select_candidates_query, job_title, qualifications, candidates_info)
-        # Append the assistant's response to the conversation history
-        st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
 
 
 # Chat UI with sticky headers and input prompt
