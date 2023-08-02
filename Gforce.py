@@ -128,58 +128,27 @@ def generate_response(openai_api_key, query_text, candidates_info):
             # Append the summarized resume text to the conversation history
             conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {summarized_resume_text}'})
 
-        # Use vector embeddings to represent desired qualifications and experience levels
-        desired_qualifications = "Linux, React, MVP"  # Replace this with the desired qualifications
-        desired_experience = 3  # Replace this with the desired minimum years of experience
+       # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
+        recruiter_prompts = {
+            "compare_candidates": "Please compare the candidates based on their qualifications and experience.",
+            "top_candidates": "Can you suggest the top candidates for the position based on if they possess a minimum of 3 years of experience in Linux, React, MVP, etc. Or similar qualifications",
+            "identify_strengths": "Identify the strengths of each candidate and their suitability for the role.",
+            "evaluate_experience": "Evaluate the past experiences of the candidates and their relevance to the job.",
+        }
 
-        # Convert the desired qualifications and experience levels to vector representations
-        desired_qualifications_vector = get_vector_embedding(desired_qualifications)
-        desired_experience_vector = np.array([desired_experience])
+        # Add a prompt for the specific query provided by the user
+        if query_text in recruiter_prompts:
+            conversation_history.append({'role': 'user', 'content': recruiter_prompts[query_text]})
 
-        # Calculate the similarity score for each candidate based on qualifications and experience
-        similarity_scores = []
-        for candidate_info in candidates_info:
-            # Convert candidate's qualifications and experience to vector representations
-            candidate_qualifications_vector = get_vector_embedding(candidate_info["summarized_resume_text"])
-            candidate_experience_vector = np.array([candidate_info["years_of_experience"]])
-
-            # Calculate the cosine similarity between the candidate and desired vectors
-            qualification_similarity = 1 - cosine(desired_qualifications_vector, candidate_qualifications_vector)
-            experience_similarity = 1 - cosine(desired_experience_vector, candidate_experience_vector)
-
-            # Combine qualification and experience similarity scores
-            overall_similarity = (qualification_similarity + experience_similarity) / 2
-            similarity_scores.append(overall_similarity)
-
-        # Find the top candidates based on similarity scores
-        num_top_candidates = 3  # You can choose the number of top candidates to display
-        top_candidate_indices = np.argsort(similarity_scores)[-num_top_candidates:]
-        top_candidates = [candidates_info[idx] for idx in top_candidate_indices][::-1]
-
-        # Generate the response with the top candidates
-        response = f"Top {num_top_candidates} candidates based on qualifications and experience:\n"
-        for rank, candidate in enumerate(top_candidates, 1):
-            response += f"{rank}. {candidate['name']} - Qualification Score: {similarity_scores[top_candidate_indices[rank - 1]]:.2f}\n"
-
-        # Use Chroma and LangChain for document question answering
-        if len(candidates_info) == 1:
-            documents = [candidate_info["resume_text"] for candidate_info in candidates_info]
-            # Split documents into chunks
-            text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-            texts = text_splitter.create_documents(documents)
-            # Select embeddings
-            embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-            # Create a vectorstore from documents
-            db = Chroma.from_documents(texts, embeddings)
-            # Create retriever interface
-            retriever = db.as_retriever()
-            # Create QA chain
-            qa = RetrievalQA.from_chain_type(llm=OpenAI(openai_api_key=openai_api_key), chain_type='stuff', retriever=retriever)
-            # Perform question answering
-            doc_qa_response = qa.run(query_text)
-            response += f"\n\nDocument Question Answering Response:\n{doc_qa_response}"
-
-        return response
+        # Generate the response using the updated conversation history
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=conversation_history,
+            api_key=openai_api_key
+        )
+        # Get the assistant's response
+        assistant_response = response['choices'][0]['message']['content']
+        return assistant_response
 
     else:
         return "Sorry, no resumes found in the database. Please upload resumes first."
