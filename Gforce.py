@@ -77,8 +77,8 @@ def extract_candidate_name(resume_text):
 
 # Function to get job title and qualifications from user input
 def get_job_details():
-    job_title = st.text_input("Enter the job title:")
-    qualifications = st.text_area("Enter the qualifications for the job (separated by commas):")
+    job_title = st.text_input("Enter the job title:", key="job_title")
+    qualifications = st.text_area("Enter the qualifications for the job (separated by commas):", key="qualifications")
     return job_title, qualifications.split(",")
 
 # Page title and styling
@@ -89,9 +89,6 @@ st.title('GForce Resume Reader')
 uploaded_resumes = []
 candidates_info = []
 
-# File upload
-uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
-
 # Ask the user for job details as soon as they upload resumes
 job_title, qualifications = get_job_details()
 
@@ -99,6 +96,9 @@ job_title, qualifications = get_job_details()
 st.sidebar.header('Job Details')
 st.sidebar.write(f'Job Title: {job_title}')
 st.sidebar.write(f'Qualifications: {", ".join(qualifications)}')
+
+# File upload
+uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
 
 # Process uploaded resumes and store in the database
 if uploaded_files:
@@ -172,39 +172,6 @@ def generate_response(openai_api_key, query_text, candidates_info, qualification
 
     else:
         return "Sorry, no resumes found in the database. Please upload resumes first."
-
-# Add a separate section in the sidebar to get job details
-st.sidebar.header('Job Details')
-job_title, qualifications = get_job_details()
-
-# User query
-user_query = st.text_area('You (Type your message here):', value='', help='Ask away!', height=100, key="user_input")
-
-# Form input and query
-send_user_query = st.button('Send', help='Click to submit the query', key="send_user_query")
-if send_user_query:
-    if user_query.strip() != '':
-        with st.spinner('Chatbot is typing...'):
-            # Add the user query to the conversation history
-            st.session_state.conversation_history.append({'role': 'user', 'content': user_query})
-            
-            # Check if the bot needs to ask the qualification question
-            if len(candidates_info) > 0 and not any("Based on the qualifications" in message["content"] for message in st.session_state.conversation_history):
-                # Add the qualification question to the conversation history
-                if job_title and qualifications:
-                    qualifications_str = ", ".join(qualifications)
-                    st.session_state.conversation_history.append({'role': 'system', 'content': f'Great! You are looking for candidates for the position of {job_title} with qualifications in {qualifications_str}.'})
-                else:
-                    st.session_state.conversation_history.append({'role': 'system', 'content': 'What qualifications are you looking for in a candidate?'})
-            
-            # Get the updated conversation history
-            conversation_history = st.session_state.conversation_history.copy()
-            # Append the uploaded resumes' content to the conversation history
-            conversation_history.extend([{'role': 'system', 'content': resume_text} for resume_text in uploaded_resumes])
-            # Generate the response using the updated conversation history
-            response = generate_response(openai_api_key, user_query, candidates_info, qualification_query="Based on the qualifications" in user_query)
-            # Append the assistant's response to the conversation history
-            st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
 
 # Chat UI with sticky headers and input prompt
 st.markdown("""
