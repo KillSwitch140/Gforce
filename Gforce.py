@@ -109,17 +109,6 @@ if uploaded_files:
             insert_resume(connection, candidate_info)
 
 
-def summarize_text(text):
-    # Use GPT-3.5-turbo for text summarization
-    openai.api_key = openai_api_key
-    summarized_text = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "system", "content": "Generate a summary for this resume"}],
-        api_key=openai.api_key,
-        temperature=0.2  # Set the temperature to control the randomness of responses
-    )
-    return summarized_text['choices'][0]['message']['content']
-
 def generate_response(openai_api_key, query_text, candidates_info):
     # Load document if file is uploaded
     if len(candidates_info) > 0:
@@ -129,9 +118,7 @@ def generate_response(openai_api_key, query_text, candidates_info):
         # Process resumes and store the summaries in candidates_info
         for idx, candidate_info in enumerate(candidates_info):
             resume_text = candidate_info["resume_text"]
-            summarized_resume_text = summarize_text(resume_text)
-            candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
-            conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {summarized_resume_text}'})
+            conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {resume_text}'})
 
 
         # Check if the user query is related to selecting candidates based on qualifications
