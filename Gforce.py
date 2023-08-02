@@ -75,6 +75,12 @@ def extract_candidate_name(resume_text):
         
     return candidate_name
 
+# Function to get job title and qualifications from user input
+def get_job_details():
+    job_title = st.text_input("Enter the job title:")
+    qualifications = st.text_area("Enter the qualifications for the job (separated by commas):")
+    return job_title, qualifications.split(",")
+
 # Page title and styling
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
 st.title('GForce Resume Reader')
@@ -85,6 +91,14 @@ candidates_info = []
 
 # File upload
 uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
+
+# Ask the user for job details as soon as they upload resumes
+job_title, qualifications = get_job_details()
+
+# Display job details in the sidebar
+st.sidebar.header('Job Details')
+st.sidebar.write(f'Job Title: {job_title}')
+st.sidebar.write(f'Qualifications: {", ".join(qualifications)}')
 
 # Process uploaded resumes and store in the database
 if uploaded_files:
@@ -108,12 +122,6 @@ if uploaded_files:
             # Store the resume and information in the database
             insert_resume(connection, candidate_info)
 
-
-# Function to get job title and qualifications from user input
-def get_job_details():
-    job_title = st.text_input("Enter the job title:")
-    qualifications = st.text_area("Enter the qualifications for the job (separated by commas):")
-    return job_title, qualifications.split(",")
 
 def generate_response(openai_api_key, query_text, candidates_info, qualification_query=False):
     # Load document if file is uploaded
@@ -177,9 +185,6 @@ send_user_query = st.button('Send', help='Click to submit the query', key="send_
 if send_user_query:
     if user_query.strip() != '':
         with st.spinner('Chatbot is typing...'):
-            # Get job details from user input
-            job_title, qualifications = get_job_details()
-
             # Add the user query to the conversation history
             st.session_state.conversation_history.append({'role': 'user', 'content': user_query})
             
@@ -200,17 +205,6 @@ if send_user_query:
             response = generate_response(openai_api_key, user_query, candidates_info, qualification_query="Based on the qualifications" in user_query)
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
-            
-            # Get the updated conversation history
-            conversation_history = st.session_state.conversation_history.copy()
-            # Append the uploaded resumes' content to the conversation history
-            conversation_history.extend([{'role': 'system', 'content': resume_text} for resume_text in uploaded_resumes])
-            # Generate the response using the updated conversation history
-            response = generate_response(openai_api_key, user_query, candidates_info, qualification_query="Based on the qualifications" in user_query)
-            # Append the assistant's response to the conversation history
-            st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
-
-
 
 # Chat UI with sticky headers and input prompt
 st.markdown("""
