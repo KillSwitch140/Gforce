@@ -97,19 +97,26 @@ if uploaded_files:
             insert_resume(connection, candidate_info)
 
 
-def summarize_text(text):
+def summarize_text_batch(texts):
     # Use a text summarization model to summarize the text within the specified token limit.
     co = cohere.Client(cohere_api_key)
-    summarized_text = co.summarize(
-        model='summarize-xlarge', 
-        length='long',
-        extractiveness='high',
-        format='paragraph',
-        temperature= 0.2,
-        additional_command = 'Generate a summary for this resume',
-        text= text
-    )
-    return summarized_text
+    batch_size = 4  # You can adjust this batch size as needed
+    summarized_texts = []
+
+    for i in range(0, len(texts), batch_size):
+        batch_texts = texts[i:i + batch_size]
+        batch_summaries = co.summarize_batch(
+            model='summarize-xlarge', 
+            length='long',
+            extractiveness='high',
+            format='paragraph',
+            temperature=0.2,
+            additional_command='Generate a summary for this resume',
+            texts=batch_texts
+        )
+        summarized_texts.extend(batch_summaries)
+
+    return summarized_texts
 
 def generate_response(openai_api_key, query_text, candidates_info):
     # Load document if file is uploaded
@@ -117,16 +124,14 @@ def generate_response(openai_api_key, query_text, candidates_info):
         # Prepare the conversation history with user query
         conversation_history = [{'role': 'user', 'content': query_text}]
 
-        # Process each resume separately and store the summaries in candidates_info
-        for idx, candidate_info in enumerate(candidates_info):
-            resume_text = candidate_info["resume_text"]
-            # Summarize each resume text to fit within the token limit
-            max_tokens = 4096  # Adjust this token limit as needed
-            summarized_resume_text = summarize_text(resume_text)
-            candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
+        # Process resumes and store the summaries in candidates_info
+        resume_texts = [candidate_info["resume_text"] for candidate_info in candidates_info]
+        summarized_resumes = summarize_text_batch(resume_texts)
 
-            # Append the summarized resume text to the conversation history
+        for idx, summarized_resume_text in enumerate(summarized_resumes):
+            candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
             conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {summarized_resume_text}'})
+
 
        # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
         recruiter_prompts = {
