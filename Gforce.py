@@ -100,7 +100,7 @@ if uploaded_files:
 def summarize_text_batch(texts):
     # Use GPT-3.5-turbo for text summarization in batches
     openai.api_key = openai_api_key
-    batch_size = 4  # You can adjust this batch size as needed
+    batch_size = 3  # You can adjust this batch size as needed
     summarized_texts = []
 
     for i in range(0, len(texts), batch_size):
@@ -109,12 +109,11 @@ def summarize_text_batch(texts):
             model="gpt-3.5-turbo",
             messages=[{"role": "system", "content": "Generate a summary for this resume"} for _ in batch_texts],
             api_key=openai.api_key,
-            chat_completions=1  # Set to 1 to get a single completion per message
+            temperature=0.2  # Set the temperature to control the randomness of responses
         )
-        summarized_texts.extend([summary['choices'][0]['message']['content'] for summary in batch_summaries['data']])
+        summarized_texts.extend([summary['choices'][0]['message']['content'] for summary in batch_summaries['choices']])
 
     return summarized_texts
-
 def generate_response(openai_api_key, query_text, candidates_info):
     # Load document if file is uploaded
     if len(candidates_info) > 0:
