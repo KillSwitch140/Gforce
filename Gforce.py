@@ -109,7 +109,11 @@ if uploaded_files:
             insert_resume(connection, candidate_info)
 
 
-# ...
+# Function to get job title and qualifications from user input
+def get_job_details():
+    job_title = st.text_input("Enter the job title:")
+    qualifications = st.text_area("Enter the qualifications for the job (separated by commas):")
+    return job_title, qualifications.split(",")
 
 def generate_response(openai_api_key, query_text, candidates_info, qualification_query=False):
     # Load document if file is uploaded
@@ -172,10 +176,17 @@ if send_user_query:
             # Add the user query to the conversation history
             st.session_state.conversation_history.append({'role': 'user', 'content': user_query})
             
+            # Get the job title and qualifications from user input
+            job_title, qualifications = get_job_details()
+            
             # Check if the bot needs to ask the qualification question
             if len(candidates_info) > 0 and not any("Based on the qualifications" in message["content"] for message in st.session_state.conversation_history):
                 # Add the qualification question to the conversation history
-                st.session_state.conversation_history.append({'role': 'system', 'content': 'What qualifications are you looking for in a candidate?'})
+                if job_title and qualifications:
+                    qualifications_str = ", ".join(qualifications)
+                    st.session_state.conversation_history.append({'role': 'system', 'content': f'Great! You are looking for candidates for the position of {job_title} with qualifications in {qualifications_str}.'})
+                else:
+                    st.session_state.conversation_history.append({'role': 'system', 'content': 'What qualifications are you looking for in a candidate?'})
             
             # Get the updated conversation history
             conversation_history = st.session_state.conversation_history.copy()
@@ -185,6 +196,7 @@ if send_user_query:
             response = generate_response(openai_api_key, user_query, candidates_info, qualification_query="Based on the qualifications" in user_query)
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
+
 
 
 # Chat UI with sticky headers and input prompt
