@@ -186,7 +186,7 @@ if send_user_query:
                     qualifications_str = ", ".join(qualifications)
                     st.session_state.conversation_history.append({'role': 'system', 'content': f'Great! You are looking for candidates for the position of {job_title} with qualifications in {qualifications_str}.'})
                 else:
-                    st.session_state.conversation_history.append({'role': 'system', 'content': 'What qualifications are you looking for in a candidate?'})
+                    st.session_state.conversation_history.append({'role': 'assistant', 'content': 'What qualifications are you looking for in a candidate?'})
             
             # Get the updated conversation history
             conversation_history = st.session_state.conversation_history.copy()
