@@ -124,7 +124,7 @@ def generate_response(openai_api_key, query_text, candidates_info):
         # Check if the user query is related to selecting candidates based on qualifications
         if "recommend candidate" in query_text.lower() and any(keyword in query_text.lower() for keyword in ["linux", "react", "mvp"]):
             # Add a prompt for selecting candidates based on qualifications
-            prompt = "Based on the qualifications of experience in Linux, React, MVP, etc., please recommend the top candidates."
+            prompt = "Based on the qualifications of experience in Linux, React, MVP, etc., please choose the candidate with the same or similar qualifications."
 
             # Append the prompt to the conversation history
             conversation_history.append({'role': 'user', 'content': prompt})
