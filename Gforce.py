@@ -62,6 +62,10 @@ def extract_candidate_name(resume_text):
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
 st.title('GForce Resume Reader')
 
+# Initialize conversation history in session state
+if "conversation_history" not in st.session_state:
+    st.session_state.conversation_history = []
+
 # List to store uploaded resume contents and extracted information
 uploaded_resumes = []
 candidates_info = []
@@ -142,7 +146,6 @@ if send_user_query:
             response = generate_response(openai_api_key, job_title, qualifications, user_query, candidates_info)
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
-
 
 # Chat UI with sticky headers and input prompt
 st.markdown("""
