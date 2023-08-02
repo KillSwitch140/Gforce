@@ -14,17 +14,19 @@ import openai
 import re
 import spacy
 import cohere
-import sqlite3
-from database import create_connection, create_resumes_table, insert_resume, get_all_resumes
+import pymongo
+from database import create_mongodb_connection, create_resumes_collection, insert_resume, get_all_resumes
 
 
 # Set up your OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 cohere_api_key = st.secrets["COHERE_API_KEY"]
-# Connect to the database and create the table
-database_name = "resumes.db"
-connection = create_connection(database_name)
-create_resumes_table(connection)
+
+
+# Connect to the database and create the collection
+database_name = "resumesdb"
+db = create_mongodb_connection(database_name)
+create_resumes_collection(db)
 
 
 def read_pdf_text(uploaded_file):
@@ -105,11 +107,10 @@ if uploaded_files:
                 'resume_text': resume_text
             }
             candidates_info.append(candidate_info)
-            # Store the resume and information in the database
-            insert_resume(connection, candidate_info)
+            # Store the resume and information in MongoDB
+            insert_resume(db.resumes, candidate_info)
 
-
-def generate_response(openai_api_key, query_text, candidates_info):
+def generate_response(openai_api_key, query_text, candidates_info, database_context):
     # Load document if file is uploaded
     if len(candidates_info) > 0:
         # Prepare the conversation history with user query
@@ -120,6 +121,8 @@ def generate_response(openai_api_key, query_text, candidates_info):
             resume_text = candidate_info["resume_text"]
             conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {resume_text}'})
 
+        # Append the database context to the conversation history
+        conversation_history.extend(database_context)
 
         # Check if the user query is related to selecting candidates based on qualifications
         if "recommend candidate" in query_text.lower() and any(keyword in query_text.lower() for keyword in ["linux", "react", "mvp"]):
@@ -154,6 +157,7 @@ def generate_response(openai_api_key, query_text, candidates_info):
     else:
         return "Sorry, no resumes found in the database. Please upload resumes first."
 
+database_context = [{'role': 'system', 'content': f'Resume {idx + 1}: {resume["resume_text"]}'} for idx, resume in enumerate(get_resumes_from_mongodb())]
 
 # User query
 user_query = st.text_area('You (Type your message here):', value='', help='Ask away!', height=100, key="user_input")
@@ -169,10 +173,11 @@ if send_user_query:
             conversation_history = st.session_state.conversation_history.copy()
             # Append the uploaded resumes' content to the conversation history
             conversation_history.extend([{'role': 'system', 'content': resume_text} for resume_text in uploaded_resumes])
-            # Generate the response using the updated conversation history
-            response = generate_response(openai_api_key, user_query, candidates_info)
+            # Generate the response using the updated conversation history and database context
+            response = generate_response(openai_api_key, user_query, candidates_info, database_context)
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
+
 
 
 # Chat UI with sticky headers and input prompt
