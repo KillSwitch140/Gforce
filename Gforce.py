@@ -58,12 +58,6 @@ def extract_candidate_name(resume_text):
         
     return candidate_name
 
-# Function to get job title and qualifications from user input
-def get_job_details():
-    job_title = st.text_input("Enter the job title:")
-    qualifications = st.text_area("Enter the qualifications for the job (separated by commas):")
-    return job_title, qualifications.split(",")
-
 # Page title and styling
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
 st.title('GForce Resume Reader')
@@ -76,12 +70,13 @@ candidates_info = []
 uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
 
 # Ask the user for job details as soon as they upload resumes
-job_title, qualifications = get_job_details()
+job_title = st.sidebar.text_input("Enter the job title:")
+qualifications = st.sidebar.text_area("Enter the qualifications for the job (separated by commas):")
 
 # Display job details in the sidebar
 st.sidebar.header('Job Details')
 st.sidebar.write(f'Job Title: {job_title}')
-st.sidebar.write(f'Qualifications: {", ".join(qualifications)}')
+st.sidebar.write(f'Qualifications: {qualifications}')
 
 # Process uploaded resumes and store in the database
 if uploaded_files:
@@ -113,7 +108,7 @@ def generate_response(openai_api_key, job_title, qualifications, user_query, can
         conversation_history = [
             {'role': 'system', 'content': 'Hello! I am your recruiter assistant. My role is to go through resumes and help recruiters make informed decisions.'},
             {'role': 'user', 'content': user_query},
-            {'role': 'system', 'content': f'You are looking for candidates for the position of {job_title} with qualifications in {", ".join(qualifications)}. Please recommend the top candidates.'}
+            {'role': 'system', 'content': f'You are looking for candidates for the position of {job_title} with qualifications in {qualifications}. Please recommend the top candidates.'}
         ]
 
         # Process resumes and store the summaries in candidates_info
