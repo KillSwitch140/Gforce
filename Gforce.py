@@ -1,5 +1,4 @@
 import streamlit as st
-import os
 import PyPDF2
 import openai
 import re
@@ -14,7 +13,6 @@ cohere_api_key = st.secrets["COHERE_API_KEY"]
 database_name = "resumes.db"
 connection = create_connection(database_name)
 create_resumes_table(connection)
-
 
 def read_pdf_text(uploaded_file):
     pdf_reader = PyPDF2.PdfReader(uploaded_file)
@@ -36,10 +34,6 @@ def extract_email(text):
     email_pattern = r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b"
     email_match = re.search(email_pattern, text)
     return email_match.group() if email_match else None
-
-# Initialize conversation history in session state
-if "conversation_history" not in st.session_state:
-    st.session_state.conversation_history = []
 
 # Function to extract candidate name using spaCy NER
 def extract_candidate_name(resume_text):
@@ -64,6 +58,12 @@ def extract_candidate_name(resume_text):
         
     return candidate_name
 
+# Function to get job title and qualifications from user input
+def get_job_details():
+    job_title = st.text_input("Enter the job title:")
+    qualifications = st.text_area("Enter the qualifications for the job (separated by commas):")
+    return job_title, qualifications.split(",")
+
 # Page title and styling
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
 st.title('GForce Resume Reader')
@@ -75,10 +75,13 @@ candidates_info = []
 # File upload
 uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
 
-# Ask the user for job details
-job_title = st.text_input("Enter the job title:")
-qualifications = st.text_area("Enter the qualifications for the job (separated by commas):")
-qualifications_list = [qualification.strip() for qualification in qualifications.split(",")]
+# Ask the user for job details as soon as they upload resumes
+job_title, qualifications = get_job_details()
+
+# Display job details in the sidebar
+st.sidebar.header('Job Details')
+st.sidebar.write(f'Job Title: {job_title}')
+st.sidebar.write(f'Qualifications: {", ".join(qualifications)}')
 
 # Process uploaded resumes and store in the database
 if uploaded_files:
@@ -102,37 +105,29 @@ if uploaded_files:
             # Store the resume and information in the database
             insert_resume(connection, candidate_info)
 
-# Function to get job details from user input
-def get_job_details():
-    job_title = st.text_input("Enter the job title:")
-    qualifications = st.text_area("Enter the qualifications for the job (separated by commas):")
-    qualifications_list = [qualification.strip() for qualification in qualifications.split(",")]
-    return job_title, qualifications_list
-
-def generate_response(openai_api_key, query_text, candidates_info):
+# Function to prompt GPT-3.5-turbo with job details and user query
+def generate_response(openai_api_key, job_title, qualifications, user_query, candidates_info):
     # Load document if file is uploaded
     if len(candidates_info) > 0:
-        # Prepare the conversation history with system message introducing the bot's role
-        if not st.session_state.conversation_history:
-            conversation_history = [
-                {'role': 'system', 'content': 'Hello! I am your recruiter assistant. My role is to go through resumes and help recruiters make informed decisions.'},
-                {'role': 'system', 'content': f'You are looking for candidates for the position of {job_title} with qualifications in {", ".join(qualifications_list)}.'},
-                {'role': 'user', 'content': query_text}
-            ]
-        else:
-            conversation_history = st.session_state.conversation_history
+        # Prepare the conversation history with system message introducing the bot's role and user query
+        conversation_history = [
+            {'role': 'system', 'content': 'Hello! I am your recruiter assistant. My role is to go through resumes and help recruiters make informed decisions.'},
+            {'role': 'user', 'content': user_query},
+            {'role': 'system', 'content': f'You are looking for candidates for the position of {job_title} with qualifications in {", ".join(qualifications)}. Please recommend the top candidates.'}
+        ]
 
         # Process resumes and store the summaries in candidates_info
         for idx, candidate_info in enumerate(candidates_info):
             resume_text = candidate_info["resume_text"]
             conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {resume_text}'})
 
-        # Generate the response using the updated conversation history
+        # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=conversation_history,
             api_key=openai_api_key
         )
+
         # Get the assistant's response
         assistant_response = response['choices'][0]['message']['content']
         return assistant_response
@@ -148,15 +143,8 @@ send_user_query = st.button('Send', help='Click to submit the query', key="send_
 if send_user_query:
     if user_query.strip() != '':
         with st.spinner('Chatbot is typing...'):
-            # Add the user query to the conversation history
-            st.session_state.conversation_history.append({'role': 'user', 'content': user_query})
-            
-            # Get the updated conversation history
-            conversation_history = st.session_state.conversation_history.copy()
-            # Append the uploaded resumes' content to the conversation history
-            conversation_history.extend([{'role': 'system', 'content': resume_text} for resume_text in uploaded_resumes])
-            # Generate the response using the updated conversation history
-            response = generate_response(openai_api_key, user_query, candidates_info)
+            # Generate the response using the job details and user query
+            response = generate_response(openai_api_key, job_title, qualifications, user_query, candidates_info)
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
 
