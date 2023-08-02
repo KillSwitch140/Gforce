@@ -1,55 +1,25 @@
-import sqlite3
+import pymongo
 
-# Function to create a SQLite database connection
-def create_connection(database_name):
+# Function to create a MongoDB connection
+def create_mongodb_connection(database_name):
     try:
-        connection = sqlite3.connect(database_name)
-        return connection
-    except sqlite3.Error as e:
+        mongo_client = pymongo.MongoClient("mongodb://localhost:27017/")
+        db = mongo_client[database_name]
+        return db
+    except pymongo.errors.ConnectionFailure as e:
         print(e)
         return None
 
-# Create the resumes table in the database
-def create_resumes_table(connection):
-    if connection is not None:
-        create_table_query = """
-            CREATE TABLE IF NOT EXISTS resumes (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                name TEXT,
-                gpa REAL,
-                email TEXT,
-                resume_text TEXT
-            );
-        """
-        try:
-            cursor = connection.cursor()
-            cursor.execute(create_table_query)
-            connection.commit()
-            cursor.close()
-        except sqlite3.Error as e:
-            print(e)
+# Create the resumes collection in MongoDB
+def create_resumes_collection(db):
+    if db is not None:
+        db.create_collection("resumes")
 
-# Function to store resume and information in the database
-def insert_resume(connection, candidate_info):
-    insert_query = """
-        INSERT INTO resumes (name, gpa, email, resume_text)
-        VALUES (?, ?, ?, ?);
-    """
-    cursor = connection.cursor()
-    cursor.execute(insert_query, (
-        candidate_info["name"],
-        candidate_info["gpa"],
-        candidate_info["email"],
-        candidate_info["resume_text"]
-    ))
-    connection.commit()
-    cursor.close()
+# Function to store resume and information in MongoDB
+def insert_resume(resumes_collection, candidate_info):
+    resumes_collection.insert_one(candidate_info)
 
-# Function to retrieve all resumes from the database
-def get_all_resumes(connection):
-    select_query = "SELECT * FROM resumes;"
-    cursor = connection.cursor()
-    cursor.execute(select_query)
-    resumes = cursor.fetchall()
-    cursor.close()
-    return resumes
+# Function to retrieve all resumes from MongoDB
+def get_all_resumes(resumes_collection):
+    return list(resumes_collection.find())
+
