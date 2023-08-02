@@ -109,14 +109,19 @@ if uploaded_files:
             insert_resume(connection, candidate_info)
 
 
-def generate_response(openai_api_key, query_text, candidates_info):
+# ...
+
+def generate_response(openai_api_key, query_text, candidates_info, qualification_query=False):
     # Load document if file is uploaded
     if len(candidates_info) > 0:
         # Prepare the conversation history with system message introducing the bot's role
-        conversation_history = [
-            {'role': 'system', 'content': 'Hello! I am your recruiter assistant. My role is to go through resumes and help recruiters make informed decisions.'},
-            {'role': 'user', 'content': query_text}
-        ]
+        if not st.session_state.conversation_history:
+            conversation_history = [
+                {'role': 'system', 'content': 'Hello! I am your recruiter assistant. My role is to go through resumes and help recruiters make informed decisions.'},
+                {'role': 'user', 'content': query_text}
+            ]
+        else:
+            conversation_history = st.session_state.conversation_history
 
         # Process resumes and store the summaries in candidates_info
         for idx, candidate_info in enumerate(candidates_info):
@@ -124,32 +129,14 @@ def generate_response(openai_api_key, query_text, candidates_info):
             conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {resume_text}'})
 
         # Check if the user query is related to selecting candidates based on qualifications
-        if "recommend candidate" in query_text.lower() and any(keyword in query_text.lower() for keyword in ["linux", "react", "mvp"]):
-            # Ask the user for qualifications
-            conversation_history.append({'role': 'assistant', 'content': "What qualifications are you looking for in a candidate?"})
-            
-            # Add the user's response to the conversation history
-            user_response = st.text_area('You (Type your qualifications here):', value='', help='Enter the qualifications you are looking for in a candidate', height=100, key="user_response")
-            conversation_history.append({'role': 'user', 'content': user_response})
+        if qualification_query:
+            # Add a prompt for selecting candidates based on qualifications
+            prompt = "Based on the qualifications you provided, please recommend the top candidates."
 
-            # Extract qualifications from user response
-            qualifications = [q.strip().lower() for q in user_response.split(',')]
-            
-            # Select two candidates with the same or similar qualifications
-            selected_candidates = []
-            for candidate_info in candidates_info:
-                candidate_qualifications = candidate_info.get('qualifications', '').lower()
-                if any(q in candidate_qualifications for q in qualifications):
-                    selected_candidates.append(candidate_info)
+            # Append the prompt to the conversation history
+            conversation_history.append({'role': 'user', 'content': prompt})
 
-            # Provide the selected candidates to the user
-            if len(selected_candidates) > 0:
-                candidates_list = "\n\n".join([f"{candidate_info['name']}:\n{candidate_info['summarized_resume_text']}" for candidate_info in selected_candidates])
-                conversation_history.append({'role': 'assistant', 'content': f"Based on the qualifications you provided, here are two candidates:\n\n{candidates_list}"})
-            else:
-                conversation_history.append({'role': 'assistant', 'content': "Sorry, no candidates with the specified qualifications were found."})
-
-        # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
+       # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
         recruiter_prompts = {
             "compare_candidates": "Please compare the candidates based on their qualifications and experience.",
             "top_candidates": "Can you suggest the top candidates for the position based on if they possess a minimum of 3 years of experience in Linux, React, MVP, etc. Or similar qualifications",
@@ -174,8 +161,6 @@ def generate_response(openai_api_key, query_text, candidates_info):
     else:
         return "Sorry, no resumes found in the database. Please upload resumes first."
 
-
-
 # User query
 user_query = st.text_area('You (Type your message here):', value='', help='Ask away!', height=100, key="user_input")
 
@@ -186,14 +171,21 @@ if send_user_query:
         with st.spinner('Chatbot is typing...'):
             # Add the user query to the conversation history
             st.session_state.conversation_history.append({'role': 'user', 'content': user_query})
+            
+            # Check if the bot needs to ask the qualification question
+            if len(candidates_info) > 0 and not any("Based on the qualifications" in message["content"] for message in st.session_state.conversation_history):
+                # Add the qualification question to the conversation history
+                st.session_state.conversation_history.append({'role': 'system', 'content': 'What qualifications are you looking for in a candidate?'})
+            
             # Get the updated conversation history
             conversation_history = st.session_state.conversation_history.copy()
             # Append the uploaded resumes' content to the conversation history
             conversation_history.extend([{'role': 'system', 'content': resume_text} for resume_text in uploaded_resumes])
             # Generate the response using the updated conversation history
-            response = generate_response(openai_api_key, user_query, candidates_info)
+            response = generate_response(openai_api_key, user_query, candidates_info, qualification_query="Based on the qualifications" in user_query)
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
+
 
 # Chat UI with sticky headers and input prompt
 st.markdown("""
