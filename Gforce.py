@@ -112,8 +112,11 @@ if uploaded_files:
 def generate_response(openai_api_key, query_text, candidates_info):
     # Load document if file is uploaded
     if len(candidates_info) > 0:
-        # Prepare the conversation history with user query
-        conversation_history = [{'role': 'user', 'content': query_text}]
+        # Prepare the conversation history with system message introducing the bot's role
+        conversation_history = [
+            {'role': 'system', 'content': 'Hello! I am your recruiter assistant. My role is to go through resumes and help recruiters make informed decisions.'},
+            {'role': 'user', 'content': query_text}
+        ]
 
         # Process resumes and store the summaries in candidates_info
         for idx, candidate_info in enumerate(candidates_info):
@@ -124,7 +127,7 @@ def generate_response(openai_api_key, query_text, candidates_info):
         # Check if the user query is related to selecting candidates based on qualifications
         if "recommend candidate" in query_text.lower() and any(keyword in query_text.lower() for keyword in ["linux", "react", "mvp"]):
             # Add a prompt for selecting candidates based on qualifications
-            prompt = "Based on the qualifications of experience in Linux, React, MVP, etc., please choose the candidate with the same or similar qualifications."
+            prompt = "Based on the qualifications of experience in Linux, React, MVP, etc., please recommend the top candidates."
 
             # Append the prompt to the conversation history
             conversation_history.append({'role': 'user', 'content': prompt})
@@ -173,68 +176,3 @@ if send_user_query:
             response = generate_response(openai_api_key, user_query, candidates_info)
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
-
-
-# Chat UI with sticky headers and input prompt
-st.markdown("""
-<style>
-    .chat-container {
-        height: 25px;
-        overflow-y: scroll;
-    }
-    .user-bubble {
-        display: flex;
-        justify-content: flex-start;
-    }
-    .user-bubble > div {
-        padding: 15px;
-        background-color: #e0e0e0;
-        border-radius: 10px;
-        width: 50%;
-        margin-left: 50%;
-    }
-    .assistant-bubble {
-        display: flex;
-        justify-content: flex-end;
-    }
-    .assistant-bubble > div {
-        padding: 15px;
-        background-color: #0078d4;
-        color: white;
-        border-radius: 10px;
-        width: 50%;
-        margin-right: 50%;
-    }
-    .chat-input-prompt {
-        position: sticky;
-        bottom: 0;
-        background-color: white;
-        padding: 10px;
-        width: 100%;
-    }
-    .chat-header {
-        position: sticky;
-        top: 0;
-        background-color: #f2f2f2;
-        padding: 10px;
-        width: 100%;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-
-# Display the entire conversation history in chat format
-if st.session_state.conversation_history:
-    for i, message in enumerate(st.session_state.conversation_history):
-        if message['role'] == 'user':
-            st.markdown(f'<div class="user-bubble"><div>{message["content"]}</div></div>', unsafe_allow_html=True)
-        elif message['role'] == 'assistant':
-            st.markdown(f'<div class="assistant-bubble"><div>{message["content"]}</div></div>', unsafe_allow_html=True)
-
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Add a clear conversation button
-clear_conversation = st.button('Clear Conversation', key="clear_conversation")
-if clear_conversation:
-    st.session_state.conversation_history.clear()
