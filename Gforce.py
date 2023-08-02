@@ -16,7 +16,7 @@ import spacy
 import cohere
 import sqlite3
 from database import create_connection, create_resumes_table, insert_resume, get_all_resumes
-from transformers import BertTokenizer, BertLMHeadModel
+
 
 # Set up your OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
@@ -63,8 +63,6 @@ def extract_candidate_name(resume_text):
             break
     return candidate_name
 
-
-
 # Page title and styling
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
 st.title('GForce Resume Reader')
@@ -99,41 +97,19 @@ if uploaded_files:
             insert_resume(connection, candidate_info)
 
 
-
-
-# Load the pre-trained BERT model and tokenizer
-bert_model_name = "bert-base-uncased"
-tokenizer = BertTokenizer.from_pretrained(bert_model_name)
-bert_model = BertLMHeadModel.from_pretrained(bert_model_name)
-
-def bert_summarize(text, max_length=100):
-    # Tokenize the text
-    inputs = tokenizer.batch_encode_plus([text], max_length=512, truncation=True, return_tensors="pt")
-    # Check if input exceeds BERT's token limit and perform chunking if necessary
-    if inputs.input_ids.shape[1] > 512:
-        # Get the total number of tokens in the input
-        total_tokens = inputs.input_ids.shape[1]
-        # Calculate the number of chunks required
-        num_chunks = (total_tokens // 512) + 1
-        # Split the input into chunks
-        chunk_size = total_tokens // num_chunks
-        chunks = [inputs.input_ids[:, i * chunk_size:(i + 1) * chunk_size] for i in range(num_chunks)]
-        # Summarize each chunk separately
-        summaries = [bert_summarize_chunk(chunk, max_length) for chunk in chunks]
-        # Concatenate the summarized chunks
-        summarized_text = " ".join(summaries)
-    else:
-        # Summarize using BERT's language model head
-        summary_ids = bert_model.generate(inputs.input_ids, max_length=max_length, min_length=50, length_penalty=2.0, num_beams=4, early_stopping=True)
-        summarized_text = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+def summarize_text(text):
+    # Use a text summarization model to summarize the text within the specified token limit.
+    co = cohere.Client(cohere_api_key)
+    summarized_text = co.summarize(
+        model='summarize-xlarge', 
+        length='long',
+        extractiveness='high',
+        format='paragraph',
+        temperature= 0.2,
+        additional_command = 'Generate a summary for this resume',
+        text= text
+    )
     return summarized_text
-
-def bert_summarize_chunk(chunk_input_ids, max_length=100):
-    # Summarize using BERT's language model head for a chunk
-    summary_ids = bert_model.generate(chunk_input_ids, max_length=max_length, min_length=50, length_penalty=2.0, num_beams=4, early_stopping=True)
-    summarized_text = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
-    return summarized_text
-
 
 def generate_response(openai_api_key, query_text, candidates_info):
     # Load document if file is uploaded
@@ -144,20 +120,25 @@ def generate_response(openai_api_key, query_text, candidates_info):
         # Process each resume separately and store the summaries in candidates_info
         for idx, candidate_info in enumerate(candidates_info):
             resume_text = candidate_info["resume_text"]
-            # Split the resume text into chunks to fit the BERT token limit
-            max_chunk_length = 512  # Adjust this length as needed
-            chunks = [resume_text[i:i + max_chunk_length] for i in range(0, len(resume_text), max_chunk_length)]
-
-            # Summarize each chunk separately
-            max_summary_length = 200  # Adjust this length as needed
-            summarized_chunks = [bert_summarize(chunk, max_summary_length) for chunk in chunks]
-
-            # Concatenate the summarized chunks
-            summarized_resume_text = " ".join(summarized_chunks)
+            # Summarize each resume text to fit within the token limit
+            max_tokens = 4096  # Adjust this token limit as needed
+            summarized_resume_text = summarize_text(resume_text)
             candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
 
             # Append the summarized resume text to the conversation history
             conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {summarized_resume_text}'})
+
+       # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
+        recruiter_prompts = {
+            "compare_candidates": "Please compare the candidates based on their qualifications and experience.",
+            "top_candidates": "Can you suggest the top candidates for the position based on if they possess a minimum of 3 years of experience in Linux, React, MVP, etc. Or similar qualifications",
+            "identify_strengths": "Identify the strengths of each candidate and their suitability for the role.",
+            "evaluate_experience": "Evaluate the past experiences of the candidates and their relevance to the job.",
+        }
+
+        # Add a prompt for the specific query provided by the user
+        if query_text in recruiter_prompts:
+            conversation_history.append({'role': 'user', 'content': recruiter_prompts[query_text]})
 
         # Generate the response using the updated conversation history
         response = openai.ChatCompletion.create(
@@ -171,7 +152,6 @@ def generate_response(openai_api_key, query_text, candidates_info):
 
     else:
         return "Sorry, no resumes found in the database. Please upload resumes first."
-
 
 
 # User query
