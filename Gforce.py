@@ -115,10 +115,9 @@ def generate_response(openai_api_key, query_text, candidates_info):
         conversation_history = [{'role': 'user', 'content': query_text}]
 
         # Process resumes and store the summaries in candidates_info
-        resume_texts = [candidate_info["resume_text"] for candidate_info in candidates_info]
-        summarized_resumes = summarize_text_batch(resume_texts)
-
-        for idx, summarized_resume_text in enumerate(summarized_resumes):
+        for idx, candidate_info in enumerate(candidates_info):
+            resume_text = candidate_info["resume_text"]
+            summarized_resume_text = summarize_text(resume_text)
             candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
             conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {summarized_resume_text}'})
 
