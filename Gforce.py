@@ -127,28 +127,6 @@ def generate_response(openai_api_key, query_text, candidates_info):
             resume_text = candidate_info["resume_text"]
             conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {resume_text}'})
 
-        # Check if the user query is related to selecting candidates based on qualifications
-        if "recommend candidate" in query_text.lower() and any(keyword in query_text.lower() for keyword in ["position", "job", "role", "qualifications"]):
-            # Add a prompt for selecting candidates based on qualifications
-            prompt = "Based on the qualifications you provided, please recommend the top candidates."
-
-            # Append the prompt to the conversation history
-            conversation_history.append({'role': 'user', 'content': prompt})
-
-       # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
-        recruiter_prompts = {
-            "compare_candidates": "Please compare the candidates based on their qualifications and experience.",
-            "top_candidates": "Can you suggest the top candidates for the position based on if they possess a minimum of 3 years of experience in Linux, React, MVP, etc. Or similar qualifications",
-            "identify_strengths": "Identify the strengths of each candidate and their suitability for the role.",
-            "evaluate_experience": "Evaluate the past experiences of the candidates and their relevance to the job.",
-        }
-
-        # Add a prompt for the specific query provided by the user
-        for keyword in recruiter_prompts:
-            if keyword in query_text.lower():
-                conversation_history.append({'role': 'user', 'content': recruiter_prompts[keyword]})
-                break
-
         # Generate the response using the updated conversation history
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
