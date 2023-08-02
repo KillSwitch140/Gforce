@@ -134,6 +134,7 @@ def generate_response(openai_api_key, job_title, qualifications, user_query, can
     else:
         return "Sorry, no resumes found in the database. Please upload resumes first."
 
+
 # User query
 user_query = st.text_area('You (Type your message here):', value='', help='Ask away!', height=100, key="user_input")
 
