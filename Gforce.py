@@ -97,23 +97,17 @@ if uploaded_files:
             insert_resume(connection, candidate_info)
 
 
-def summarize_text_batch(texts):
-    # Use GPT-3.5-turbo for text summarization in batches
+def summarize_text(text):
+    # Use GPT-3.5-turbo for text summarization
     openai.api_key = openai_api_key
-    batch_size = 3  # You can adjust this batch size as needed
-    summarized_texts = []
+    summarized_text = openai.ChatCompletion.create(
+        model="gpt-3.5-turbo",
+        messages=[{"role": "system", "content": "Generate a summary for this resume"}],
+        api_key=openai.api_key,
+        temperature=0.2  # Set the temperature to control the randomness of responses
+    )
+    return summarized_text['choices'][0]['message']['content']
 
-    for i in range(0, len(texts), batch_size):
-        batch_texts = texts[i:i + batch_size]
-        batch_summaries = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "system", "content": "Generate a summary for this resume"} for _ in batch_texts],
-            api_key=openai.api_key,
-            temperature=0.2  # Set the temperature to control the randomness of responses
-        )
-        summarized_texts.extend([summary['choices'][0]['message']['content'] for summary in batch_summaries['choices']])
-
-    return summarized_texts
 def generate_response(openai_api_key, query_text, candidates_info):
     # Load document if file is uploaded
     if len(candidates_info) > 0:
@@ -121,13 +115,11 @@ def generate_response(openai_api_key, query_text, candidates_info):
         conversation_history = [{'role': 'user', 'content': query_text}]
 
         # Process resumes and store the summaries in candidates_info
-        resume_texts = [candidate_info["resume_text"] for candidate_info in candidates_info]
-        summarized_resumes = summarize_text_batch(resume_texts)
-
-        for idx, summarized_resume_text in enumerate(summarized_resumes):
+        for idx, candidate_info in enumerate(candidates_info):
+            resume_text = candidate_info["resume_text"]
+            summarized_resume_text = summarize_text(resume_text)
             candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
             conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {summarized_resume_text}'})
-
 
        # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
         recruiter_prompts = {
