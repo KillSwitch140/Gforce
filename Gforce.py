@@ -115,11 +115,21 @@ def generate_response(openai_api_key, query_text, candidates_info):
         conversation_history = [{'role': 'user', 'content': query_text}]
 
         # Process resumes and store the summaries in candidates_info
-        for idx, candidate_info in enumerate(candidates_info):
-            resume_text = candidate_info["resume_text"]
-            summarized_resume_text = summarize_text(resume_text)
+        resume_texts = [candidate_info["resume_text"] for candidate_info in candidates_info]
+        summarized_resumes = summarize_text_batch(resume_texts)
+
+        for idx, summarized_resume_text in enumerate(summarized_resumes):
             candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
             conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {summarized_resume_text}'})
+
+        # Check if the user query is related to selecting candidates based on qualifications
+        if "select candidates" in query_text.lower() and any(keyword in query_text.lower() for keyword in ["linux", "react", "mvp"]):
+            # Prepare the prompt with specific qualifications
+            qualifications = ["Linux", "React", "MVP"]  # Update this list with other desired qualifications
+            prompt = f"Based on the qualifications {', '.join(qualifications)}, please select the top candidates."
+
+            # Append the prompt to the conversation history
+            conversation_history.append({'role': 'user', 'content': prompt})
 
        # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
         recruiter_prompts = {
