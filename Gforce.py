@@ -70,10 +70,10 @@ candidates_info = []
 # File upload
 uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
 
-# Add a separate section in the sidebar to get job details
+# User input for job details
 st.sidebar.header('Job Details')
 job_title = st.sidebar.text_input("Enter the job title:")
-qualifications = st.sidebar.text_area("Enter the qualifications for the job (separated by commas):")
+qualifications = st.sidebar.text_area("Enter the qualifications for the job (separated by commas):").split(",")
 
 # Display job details in the sidebar
 st.sidebar.write(f'Job Title: {job_title}')
