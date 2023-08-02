@@ -77,21 +77,6 @@ qualifications = st.sidebar.text_area("Enter the qualifications for the job (sep
 st.sidebar.write(f'Job Title: {job_title}')
 st.sidebar.write(f'Qualifications: {", ".join(qualifications)}')
 
-
-def summarize_text(text):
-    # Use a text summarization model to summarize the text within the specified token limit.
-    co = cohere.Client(cohere_api_key)
-    summarized_text = co.summarize(
-        model='summarize-xlarge', 
-        length='long',
-        extractiveness='high',
-        format='paragraph',
-        temperature= 0.2,
-        additional_command = 'Generate a summary for this resume',
-        text= text
-    )
-    return summarized_text
-
 def generate_response(openai_api_key, query_text, candidates_info):
     # Load document if file is uploaded
     if len(candidates_info) > 0:
@@ -101,15 +86,10 @@ def generate_response(openai_api_key, query_text, candidates_info):
         # Process each resume separately and store the summaries in candidates_info
         for idx, candidate_info in enumerate(candidates_info):
             resume_text = candidate_info["resume_text"]
-            # Summarize each resume text to fit within the token limit
-            max_tokens = 4096  # Adjust this token limit as needed
-            summarized_resume_text = summarize_text(resume_text)
-            candidates_info[idx]["summarized_resume_text"] = summarized_resume_text
-
             # Append the summarized resume text to the conversation history
-            conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {summarized_resume_text}'})
+            conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {resume_text}'})
 
-       # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
+        # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
         recruiter_prompts = {
             "compare_candidates": "Please compare the candidates based on their qualifications and experience.",
             "top_candidates": "Can you suggest the top candidates for the position based on if they possess a minimum of 3 years of experience in Linux, React, MVP, etc. Or similar qualifications",
@@ -153,7 +133,6 @@ if send_user_query:
             response = generate_response(openai_api_key, user_query, candidates_info)
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
-
 
 # Chat UI with sticky headers and input prompt
 st.markdown("""
