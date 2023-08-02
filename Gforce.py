@@ -123,7 +123,7 @@ def generate_response(openai_api_key, query_text, candidates_info):
             conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {summarized_resume_text}'})
 
         # Check if the user query is related to selecting candidates based on qualifications
-        if "select candidates" in query_text.lower() and any(keyword in query_text.lower() for keyword in ["linux", "react", "mvp"]):
+        if "recommend candidate" in query_text.lower() and any(keyword in query_text.lower() for keyword in ["linux", "react", "mvp"]):
             # Prepare the prompt with specific qualifications
             qualifications = ["Linux", "React", "MVP"]  # Update this list with other desired qualifications
             prompt = f"Based on the qualifications {', '.join(qualifications)}, please select the top candidates."
