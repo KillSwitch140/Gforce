@@ -134,6 +134,7 @@ def generate_response(openai_api_key, query_text, candidates_info):
 
 
 
+
 # User query
 user_query = st.text_area('You (Type your message here):', value='', help='Ask away!', height=100, key="user_input")
 
