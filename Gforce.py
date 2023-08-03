@@ -4,11 +4,17 @@ import PyPDF2
 import re
 import spacy
 import openai
+from database import create_connection, create_resumes_table, insert_resume, get_all_resumes
 
 # Set up your OpenAI API key from Streamlit secrets
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 
-# Function to read PDF text
+# Connect to the database and create the table
+database_name = "resumes.db"
+connection = create_connection(database_name)
+create_resumes_table(connection)
+
+
 def read_pdf_text(uploaded_file):
     pdf_reader = PyPDF2.PdfReader(uploaded_file)
     text = ""
@@ -32,43 +38,22 @@ def extract_email(text):
 
 # Initialize conversation history in session state
 if "conversation_history" not in st.session_state:
-    st.session_state.conversation_history = [
-        {'role': 'system', 'content': 'Hello! I am your recruiter assistant. My role is to go through resumes and help recruiters make informed decisions.'}
-    ]
+    st.session_state.conversation_history = []
 
 # Function to extract candidate name using spaCy NER
 def extract_candidate_name(resume_text):
-    # Assume the candidate name is in the first line of the resume text
-    first_line = resume_text.strip().split('\n')[0]
-    
-    # Initialize spaCy NER model
     nlp = spacy.load("en_core_web_sm")
-    
-    # Process the first line with spaCy NER
-    doc = nlp(first_line)
+    doc = nlp(resume_text)
     candidate_name = None
-    
     for ent in doc.ents:
         if ent.label_ == "PERSON":
             candidate_name = ent.text
             break
-
-    # If spaCy NER did not find a PERSON entity in the first line, use the entire first line as the candidate name
-    if not candidate_name:
-        candidate_name = first_line.strip()
-        
     return candidate_name
 
 # Page title and styling
 st.set_page_config(page_title='GForce Resume Reader', layout='wide')
 st.title('GForce Resume Reader')
-
-# List to store uploaded resume contents and extracted information
-uploaded_resumes = []
-candidates_info = []
-
-# File upload
-uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
 
 # Ask the user for job details as soon as they upload resumes
 job_title = st.sidebar.text_input("Enter the job title:")
@@ -79,29 +64,60 @@ st.sidebar.header('Job Details')
 st.sidebar.write(f'Job Title: {job_title}')
 st.sidebar.write(f'Qualifications: {qualifications}')
 
+# List to store uploaded resume contents and extracted information
+uploaded_resumes = []
+candidates_info = []
+
+# File upload
+uploaded_files = st.file_uploader('Please upload your resume', type='pdf', accept_multiple_files=True)
+
+# Process uploaded resumes and store in the database
+if uploaded_files:
+    for uploaded_file in uploaded_files:
+        if uploaded_file is not None:
+            resume_text = read_pdf_text(uploaded_file)
+            uploaded_resumes.append(resume_text)
+            # Extract GPA, email, and past
+            gpa = extract_gpa(resume_text)
+            email = extract_email(resume_text)
+            # Extract candidate name using spaCy NER
+            candidate_name = extract_candidate_name(resume_text)
+            # Store the information for each candidate
+            candidate_info = {
+                'name': candidate_name,
+                'gpa': gpa,
+                'email': email,
+                'resume_text': resume_text
+            }
+            candidates_info.append(candidate_info)
+            # Store the resume and information in the database
+            insert_resume(connection, candidate_info)
+
 def generate_response(openai_api_key, query_text, candidates_info):
     # Load document if file is uploaded
     if len(candidates_info) > 0:
         # Prepare the conversation history with user query
         conversation_history = [{'role': 'user', 'content': query_text}]
 
-        # Process each resume separately and store the summaries in candidates_info
-        for idx, candidate_info in enumerate(candidates_info):
+        # Extract candidate names mentioned in the query
+        mentioned_candidates = set()
+        for candidate_info in candidates_info:
+            candidate_name = candidate_info['name']
+            if candidate_name and candidate_name.lower() in query_text.lower():
+                mentioned_candidates.add(candidate_name)
+
+        # Filter candidates based on the mentioned names
+        filtered_candidates_info = [
+            candidate_info
+            for candidate_info in candidates_info
+            if candidate_info['name'] in mentioned_candidates
+        ]
+
+        # Process each resume separately and store the summaries in filtered_candidates_info
+        for idx, candidate_info in enumerate(filtered_candidates_info):
             resume_text = candidate_info["resume_text"]
             # Append the summarized resume text to the conversation history
             conversation_history.append({'role': 'system', 'content': f'Resume {idx + 1}: {resume_text}'})
-
-        # Use GPT-3.5-turbo for recruiter assistant tasks based on prompts
-        recruiter_prompts = {
-            "compare_candidates": "Please compare the candidates based on their qualifications and experience.",
-            "top_candidates": "Can you suggest the top candidates for the position based on if they possess a minimum of 3 years of experience in Linux, React, MVP, etc. Or similar qualifications",
-            "identify_strengths": "Identify the strengths of each candidate and their suitability for the role.",
-            "evaluate_experience": "Evaluate the past experiences of the candidates and their relevance to the job.",
-        }
-
-        # Add a prompt for the specific query provided by the user
-        if query_text in recruiter_prompts:
-            conversation_history.append({'role': 'user', 'content': recruiter_prompts[query_text]})
 
         # Generate the response using the updated conversation history
         response = openai.ChatCompletion.create(
@@ -115,6 +131,7 @@ def generate_response(openai_api_key, query_text, candidates_info):
 
     else:
         return "Sorry, no resumes found in the database. Please upload resumes first."
+
 
 
 # User query
@@ -135,7 +152,6 @@ if send_user_query:
             response = generate_response(openai_api_key, user_query, candidates_info)
             # Append the assistant's response to the conversation history
             st.session_state.conversation_history.append({'role': 'assistant', 'content': response})
-
 # Chat UI with sticky headers and input prompt
 st.markdown("""
 <style>
@@ -195,7 +211,10 @@ if st.session_state.conversation_history:
 
 st.markdown('</div>', unsafe_allow_html=True)
 
+def clear_conversation():
+    # Clear the conversation history
+    st.session_state.conversation_history = []
+
 # Add a clear conversation button
-clear_conversation = st.button('Clear Conversation', key="clear_conversation")
-if clear_conversation:
-    st.session_state.conversation_history.clear()
+if st.button('Clear Conversation'):
+    clear_conversation()
