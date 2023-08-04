@@ -18,27 +18,29 @@ import pysqlite3
 from langchain.chat_models import ChatOpenAI
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+import qdrant_client
 from qdrant_client import QdrantClient,models
 from qdrant_client.http.models import PointStruct
 from langchain.agents import initialize_agent
-
-
-
+from langchain.vectorstores import Qdrant
 
 openai_api_key = st.secrets["OPENAI_API_KEY"]
+os.environ['QDRANT_COLLECTION'] ="resume"
 
-# client = QdrantClient(
-#     url="https://fd3fb6ff-e014-4338-81ce-7d6e9db358b3.eu-central-1-0.aws.cloud.qdrant.io:6333", 
-#     api_key=st.secrets["QDRANT_API_KEY"],
-# )
-# collection_config = qdrant_client.http.models.VectorParams(
-#         size=1536, # 768 for instructor-xl, 1536 for OpenAI
-#         distance=qdrant_client.http.models.Distance.COSINE
-#     )
-# client.recreate_collection(
-#     collection_name="resume_bot",
-#     vectors_config=collection_config, distance=models.Distance.COSINE),
-# )
+
+client = QdrantClient(
+    url="https://fd3fb6ff-e014-4338-81ce-7d6e9db358b3.eu-central-1-0.aws.cloud.qdrant.io:6333", 
+    api_key=st.secrets["QDRANT_API_KEY"],
+)
+collection_config = qdrant_client.http.models.VectorParams(
+        size=1536,
+        distance=qdrant_client.http.models.Distance.COSINE
+    )
+client.recreate_collection(
+   collection_name=os.getenv("QDRANT_COLLECTION"),
+    vectors_config=collection_config)
+
+
 
 def read_pdf_text(uploaded_file):
     pdf_reader = PyPDF2.PdfReader(uploaded_file)
@@ -59,12 +61,18 @@ def generate_response(doc_texts, openai_api_key, query_text):
     
     # Select embeddings
     embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-
+    
     # Create a vectorstore from documents
-    db = Chroma.from_documents(texts, embeddings)
-
+    qdrant = Qdrant.from_documents(
+    texts,
+    embeddings,
+    url="https://fd3fb6ff-e014-4338-81ce-7d6e9db358b3.eu-central-1-0.aws.cloud.qdrant.io:6333",
+    prefer_grpc=True,
+    api_key=st.secrets["QDRANT_API_KEY"],
+    collection_name="resume",
+)
     # Create retriever interface
-    retriever = db.as_retriever(search_type="similarity")
+    retriever = qdrant.as_retriever(search_type="similarity")
     #Bot memory
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     # template  = """
@@ -81,7 +89,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     
 # Store LLM generated responses
 if "messages" not in st.session_state.keys():
-    st.session_state.messages = [{"role": "assistant", "content": "Hi, I am your resume Q&A bot. How can I help you today?"}]
+    st.session_state.messages = [{"role": "assistant", "content": "You are a AI assistant created to help hiring managers review resumes and shortlist candidates. You have been provided with resumes and job descriptions to review. When asked questions, use the provided documents to provide helpful and relevant information to assist the hiring manager. Be concise, polite and professional. Do not provide any additional commentary or opinions beyond answering the questions directly based on the provided documents."}]
 
 # Page title
 st.set_page_config(page_title='Gforce Resume Assistant', layout='wide')
