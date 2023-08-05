@@ -81,21 +81,22 @@ def generate_response(doc_texts, openai_api_key, query_text):
     #Bot memory
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     template  = """
-            You are an AI assistant created to help hiring managers review resumes and shortlist candidates.\
- You have been provided with resumes and job descriptions to review.\
- When asked questions, use the provided documents to provide helpful and relevant information to assist the hiring manager. \
- Be concise, polite and professional. Do not provide any additional commentary or opinions beyond answering the questions directly based on the provided documents.
+            I am an assistant to a hiring manager. I have been given the following resumes: {resumes}. My role is to read through the resumes and provide helpful information to the hiring manager to aid in selecting the best candidate for the job opening. When asked a question about the candidates, I will search through the resumes, summarize the relevant details about each candidate's background and experience, and provide a response with useful information to assist the hiring manager in making a hiring decision.
+
+The hiring manager has asked: {question}
             
     """
     
-   
+   candidate_prompt = PromptTemplate(
+    input_variables=["documents", "question"],
+    template=template 
     docs = db.similarity_search(query_text)
     #Create QA chain 
     qa = load_qa_chain(
             llm=llm, 
             chain_type="stuff", 
             memory=memory, 
-            prompt=template
+            prompt=candidate_prompt
         )
     response = qa.run(input_documents=docs, question=query_text)
     
