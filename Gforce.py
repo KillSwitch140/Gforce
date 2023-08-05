@@ -15,6 +15,7 @@ from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 import pysqlite3
+from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
