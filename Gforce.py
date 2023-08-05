@@ -80,27 +80,28 @@ def generate_response(doc_texts, openai_api_key, query_text):
     retriever = db.as_retriever(search_type="similarity")
     #Bot memory
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    template  = """
-            I am an assistant to a hiring manager. I have been given the following resumes: {documents}. My role is to read through the resumes and provide helpful information to the hiring manager to aid in selecting the best candidate for the job opening. When asked a question about the candidates, I will search through the resumes, summarize the relevant details about each candidate's background and experience, and provide a response with useful information to assist the hiring manager in making a hiring decision.
+    custom_prompt_template = """Use the following pieces of information to answer the user's question.
+    If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
-The hiring manager has asked: {question}
-            
+    Context: {context}
+    Question: {question}
+
+    Only return the helpful answer below and nothing else.
+    Helpful answer:
     """
     
-    candidate_prompt = PromptTemplate(
-    input_variables=["documents", "question"],
-    template=template)
+    prompt = PromptTemplate(template=custom_prompt_template,
+                            input_variables=['context', 'question'])
     
     docs = db.similarity_search(query_text)
     #Create QA chain 
-    qa = load_qa_chain(
-            llm=llm, 
-            chain_type="stuff", 
-            memory=memory, 
-            prompt=candidate_prompt
-        )
-    response = qa.run(input_documents=docs, question=query_text)
-    
+    qa =  RetrievalQA.from_chain_type(llm=llm,
+                                       chain_type='stuff',
+                                       retriever=db.as_retriever(search_kwargs={'k': 2}),
+                                       return_source_documents=True,
+                                       chain_type_kwargs={'prompt': prompt}
+                                       )
+    response = qa_result({'query': query_text})
     return response
     
 # Store LLM generated responses
