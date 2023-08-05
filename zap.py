@@ -1,8 +1,10 @@
+import streamlit as st
 from langchain.llms import OpenAI
 from langchain.agents import initialize_agent
 from langchain.agents.agent_toolkits import ZapierToolkit
 from langchain.utilities.zapier import ZapierNLAWrapper
 import os
+from os import environ
 import time
 
 
@@ -21,14 +23,13 @@ def schedule_interview(person_name, person_email, date, time):
     date_time = f"{date} at {time}"
     schedule_meet = f"Schedule a 30 min virtual Google Meet titled {meeting_title} on {date_time}. Add the created meeting's details as a new event in my calendar"
     send_email = (
-        f"Draft a well formatted, professional email to {person_email} notifying {person_name} that they have been selected "
-        f"for an interview with Hiring Plug. Please search my calendar for 'Hiring Plug Interview with {person_name}' and provide the respective meeting details."
+        f"Draft email to {person_email}"
     )
 
     # Execute the agent.run function for scheduling the meeting
     agent.run(schedule_meet)
-    
-    # Execute the agent.run function for sending the email
     agent.run(send_email)
-
     return True  # Return True if the interview is scheduled and the email is sent successfully
+
+   
+   
