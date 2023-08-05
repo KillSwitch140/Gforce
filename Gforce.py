@@ -23,6 +23,8 @@ from qdrant_client import QdrantClient,models
 from qdrant_client.http.models import PointStruct
 from langchain.agents import initialize_agent
 from langchain.vectorstores import Qdrant
+from zap import schedule_interview
+
 
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 os.environ['QDRANT_COLLECTION'] ="resume"
@@ -70,6 +72,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     prefer_grpc=True,
     api_key=st.secrets["QDRANT_API_KEY"],
     collection_name="resume",
+    force_recreate=True,
 )
     # Create retriever interface
     retriever = qdrant.as_retriever(search_type="similarity")
