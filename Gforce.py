@@ -102,7 +102,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
                                        chain_type_kwargs={'prompt': prompt}
                                        )
     response = qa({'query': query_text})
-    return response
+    return response["result"]
     
 # Store LLM generated responses
 if "messages" not in st.session_state.keys():
