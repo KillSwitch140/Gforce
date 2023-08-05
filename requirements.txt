@@ -18,3 +18,4 @@ tensorflow-hub
 pypdf
 InstructorEmbedding
 qdrant-client
+vertexai
