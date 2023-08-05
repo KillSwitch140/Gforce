@@ -87,7 +87,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
  Be concise, polite and professional. Do not provide any additional commentary or opinions beyond answering the questions directly based on the provided documents.
             
     """
-    QA_CHAIN_PROMPT = PromptTemplate.from_template(template)
+    
    
     docs = db.similarity_search(query_text)
     #Create QA chain 
@@ -95,7 +95,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
             llm=llm, 
             chain_type="stuff", 
             memory=memory, 
-            prompt=QA_CHAIN_PROMPT
+            prompt=template
         )
     response = qa.run(input_documents=docs, question=query_text)
     
