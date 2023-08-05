@@ -88,7 +88,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     """
     QA_CHAIN_PROMPT = PromptTemplate.from_template(template)
    
-    docs = db.similarity_search(query)
+    docs = db.similarity_search(query_text)
     #Create QA chain 
     qa = load_qa_chain(
             llm=llm, 
