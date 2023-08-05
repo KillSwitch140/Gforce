@@ -80,8 +80,11 @@ def generate_response(doc_texts, openai_api_key, query_text):
     retriever = db.as_retriever(search_type="similarity")
     #Bot memory
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    custom_prompt_template = """Use the following resumesn to answer the hiring managers questions.
-    If you don't know the answer, just say that you don't know, don't try to make up an answer.
+    custom_prompt_template = """You are a hiring manager's helpful assistant that reads multiple resumes of candidates and answers any questions related to the candidates,\
+                        Only answer the quesions truthfully and accurate do not provide further details.\
+                        If you don't know the answer, just say that you don't know, don't try to make up an answer.\
+                        If you are asked to summarize a candidate'sresume, summarize it in 5 sentences, 3 sentences for their experience and projects, 1 sentence for their education and 1 sentence for their skills\
+                        If you are asked to compare certain candidates just provide the summarization of those candidate's resumes
 
     Context: {context}
     Question: {question}
