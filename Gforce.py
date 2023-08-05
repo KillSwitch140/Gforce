@@ -95,7 +95,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
             llm=llm, 
             chain_type="stuff", 
             memory=memory, 
-            prompt=prompt
+            prompt=QA_CHAIN_PROMPT
         )
     response = qa.run(input_documents=docs, question=query_text)
     
