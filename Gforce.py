@@ -87,9 +87,10 @@ The hiring manager has asked: {question}
             
     """
     
-   candidate_prompt = PromptTemplate(
+    candidate_prompt = PromptTemplate(
     input_variables=["documents", "question"],
-    template=template 
+    template=template)
+    
     docs = db.similarity_search(query_text)
     #Create QA chain 
     qa = load_qa_chain(
