@@ -80,7 +80,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     retriever = db.as_retriever(search_type="similarity")
     #Bot memory
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    custom_prompt_template = """Use the following pieces of information to answer the user's question.
+    custom_prompt_template = """Use the following resumesn to answer the hiring managers questions.
     If you don't know the answer, just say that you don't know, don't try to make up an answer.
 
     Context: {context}
@@ -101,7 +101,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
                                        return_source_documents=True,
                                        chain_type_kwargs={'prompt': prompt}
                                        )
-    response = qa_result({'query': query_text})
+    response = qa({'query': query_text})
     return response
     
 # Store LLM generated responses
