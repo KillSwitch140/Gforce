@@ -97,8 +97,8 @@ def generate_response(doc_texts, openai_api_key, query_text):
     #Create QA chain 
     qa =  RetrievalQA.from_chain_type(llm=llm,
                                        chain_type='stuff',
-                                       retriever=db.as_retriever(search_kwargs={'k': 2}),
-                                       return_source_documents=True,
+                                       retriever=retriver,
+                                       return_source_documents=False,
                                        chain_type_kwargs={'prompt': prompt}
                                        )
     response = qa({'query': query_text})
