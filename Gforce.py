@@ -97,7 +97,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     #Create QA chain 
     qa =  RetrievalQA.from_chain_type(llm=llm,
                                        chain_type='stuff',
-                                       retriever=retriver,
+                                       retriever=retriever,
                                        return_source_documents=False,
                                        chain_type_kwargs={'prompt': prompt}
                                        )
