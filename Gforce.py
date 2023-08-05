@@ -81,7 +81,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     #Bot memory
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     template  = """
-            I am an assistant to a hiring manager. I have been given the following resumes: {resumes}. My role is to read through the resumes and provide helpful information to the hiring manager to aid in selecting the best candidate for the job opening. When asked a question about the candidates, I will search through the resumes, summarize the relevant details about each candidate's background and experience, and provide a response with useful information to assist the hiring manager in making a hiring decision.
+            I am an assistant to a hiring manager. I have been given the following resumes: {documents}. My role is to read through the resumes and provide helpful information to the hiring manager to aid in selecting the best candidate for the job opening. When asked a question about the candidates, I will search through the resumes, summarize the relevant details about each candidate's background and experience, and provide a response with useful information to assist the hiring manager in making a hiring decision.
 
 The hiring manager has asked: {question}
             
