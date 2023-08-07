@@ -15,7 +15,6 @@ from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 import pysqlite3
-from langchain.chains.question_answering import load_qa_chain
 from langchain.chat_models import ChatOpenAI
 import sys
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
@@ -80,11 +79,14 @@ def generate_response(doc_texts, openai_api_key, query_text):
     retriever = db.as_retriever(search_type="similarity")
     #Bot memory
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    custom_prompt_template = """You are a hiring manager's helpful assistant that reads multiple resumes of candidates and answers any questions related to the candidates,\
-                        Only answer the quesions truthfully and accurate do not provide further details.\
+    custom_prompt_template = """You are a hiring manager's helpful assistant that reads multiple resumes of candidates and answers the hiring manager's questions related to the candidates,\
+                        Do your best to answer the hiring manager's so that it helps them select candidates better\
+                        Your goal is to aid the hiring in the candidate selection process.
                         If you don't know the answer, just say that you don't know, don't try to make up an answer.\
                         If you are asked to summarize a candidate'sresume, summarize it in 7 sentences, 3 sentences for their experience, 2 sentences projects, 1 sentence for their education and 1 sentence for their skills\
-                        If you are asked to compare certain candidates just provide the separate summarization of those candidate's resumes
+                        If you are asked to compare certain candidates just provide the separate summarization of those candidate's resumes.\
+                        If you are asked for the candidate's email, provide them with the candidate's email along with the candidate's name\
+                        If you asked to select a candidates based on certain skills or experience then go through the resumes and find the candidates with the relevant skills or experience and provide the hiring manager with a list of those candidates/
 
     Context: {context}
     Question: {question}
@@ -116,10 +118,10 @@ st.set_page_config(page_title='Gforce Resume Assistant', layout='wide')
 st.title('Gforce Resume Assistant')
 
 # File upload
-uploaded_files = st.file_uploader('Upload PDF(s)', type=['pdf'], accept_multiple_files=True)
+uploaded_files = st.file_uploader('Please upload you resume(s)', type=['pdf'], accept_multiple_files=True)
 
 # Query text
-query_text = st.text_input('Enter your question:', placeholder='Please provide a short summary.')
+query_text = st.text_input('Enter your question:', placeholder='Select candidates based on experience and skills')
 
 # Initialize chat placeholder as an empty list
 if "chat_placeholder" not in st.session_state.keys():
