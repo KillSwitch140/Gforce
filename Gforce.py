@@ -79,24 +79,24 @@ def generate_response(doc_texts, openai_api_key, query_text):
     retriever = db.as_retriever(search_type="similarity")
     #Bot memory
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    custom_prompt_template = """You are a hiring manager's helpful assistant that reads multiple resumes of candidates and answers the hiring manager's questions related to the candidates,\
-                        Do your best to answer the hiring manager's so that it helps them select candidates better\
-                        Your goal is to aid the hiring in the candidate selection process.
-                        If you don't know the answer, just say that you don't know, don't try to make up an answer.\
-                        If you are asked to summarize a candidate'sresume, summarize it in 7 sentences, 3 sentences for their experience, 2 sentences projects, 1 sentence for their education and 1 sentence for their skills\
-                        If you are asked to compare certain candidates just provide the separate summarization of those candidate's resumes.\
-                        If you are asked for the candidate's email, provide them with the candidate's email along with the candidate's name\
-                        If you asked to select a candidates based on certain skills or experience then go through the resumes and find the candidates with the relevant skills or experience and provide the hiring manager with a list of those candidates/
+    # custom_prompt_template = """You are a hiring manager's helpful assistant that reads multiple resumes of candidates and answers the hiring manager's questions related to the candidates,\
+    #                     Do your best to answer the hiring manager's so that it helps them select candidates better\
+    #                     Your goal is to aid the hiring in the candidate selection process.
+    #                     If you don't know the answer, just say that you don't know, don't try to make up an answer.\
+    #                     If you are asked to summarize a candidate'sresume, summarize it in 7 sentences, 3 sentences for their experience, 2 sentences projects, 1 sentence for their education and 1 sentence for their skills\
+    #                     If you are asked to compare certain candidates just provide the separate summarization of those candidate's resumes.\
+    #                     If you are asked for the candidate's email, provide them with the candidate's email along with the candidate's name\
+    #                     If you asked to select a candidates based on certain skills or experience then go through the resumes and find the candidates with the relevant skills or experience and provide the hiring manager with a list of those candidates/
 
-    Context: {context}
-    Question: {question}
+    # Context: {context}
+    # Question: {question}
 
-    Only return the helpful answer below and nothing else.
-    Helpful answer:
-    """
+    # Only return the helpful answer below and nothing else.
+    # Helpful answer:
+    # """
     
-    prompt = PromptTemplate(template=custom_prompt_template,
-                            input_variables=['context', 'question'])
+    # prompt = PromptTemplate(template=custom_prompt_template,
+    #                         input_variables=['context', 'question'])
     
     docs = db.similarity_search(query_text)
     #Create QA chain 
@@ -104,14 +104,14 @@ def generate_response(doc_texts, openai_api_key, query_text):
                                        chain_type='stuff',
                                        retriever=retriever,
                                        return_source_documents=False,
-                                       chain_type_kwargs={'prompt': prompt}
+                                       # chain_type_kwargs={'prompt': prompt}
                                        )
     response = qa({'query': query_text})
     return response["result"]
     
 # Store LLM generated responses
 if "messages" not in st.session_state.keys():
-    st.session_state.messages = [{"role": "assistant", "content": "You are a AI assistant created to help hiring managers review resumes and shortlist candidates. You have been provided with resumes and job descriptions to review. When asked questions, use the provided documents to provide helpful and relevant information to assist the hiring manager. Be concise, polite and professional. Do not provide any additional commentary or opinions beyond answering the questions directly based on the provided documents."}]
+    st.session_state.messages = [{"role": "assistant", "content": "You are a Q&A chatbot that answers questions based on uploaded files"}]
 
 # Page title
 st.set_page_config(page_title='Gforce Resume Assistant', layout='wide')
@@ -154,27 +154,27 @@ def clear_chat_history():
 st.button('Clear Chat History', on_click=clear_chat_history)
 
 # Create a sidebar with text input boxes and a button
-st.sidebar.header("Schedule Interview")
-person_name = st.sidebar.text_input("Enter Person's Name", "")
-person_email = st.sidebar.text_input("Enter Person's Email Address", "")
-date = st.sidebar.date_input("Select Date for Interview")
-time = st.sidebar.time_input("Select Time for Interview")
-schedule_button = st.sidebar.button("Schedule Interview")
+# st.sidebar.header("Schedule Interview")
+# person_name = st.sidebar.text_input("Enter Person's Name", "")
+# person_email = st.sidebar.text_input("Enter Person's Email Address", "")
+# date = st.sidebar.date_input("Select Date for Interview")
+# time = st.sidebar.time_input("Select Time for Interview")
+# schedule_button = st.sidebar.button("Schedule Interview")
 
-if schedule_button:
-    if not person_name:
-        st.sidebar.error("Please enter the person's name.")
-    elif not person_email:
-        st.sidebar.error("Please enter the person's email address.")
-    elif not date:
-        st.sidebar.error("Please select the date for the interview.")
-    elif not time:
-        st.sidebar.error("Please select the time for the interview.")
-    else:
-        # Call the schedule_interview function from the zap.py file
-        success = schedule_interview(person_name, person_email, date, time)
+# if schedule_button:
+#     if not person_name:
+#         st.sidebar.error("Please enter the person's name.")
+#     elif not person_email:
+#         st.sidebar.error("Please enter the person's email address.")
+#     elif not date:
+#         st.sidebar.error("Please select the date for the interview.")
+#     elif not time:
+#         st.sidebar.error("Please select the time for the interview.")
+#     else:
+#         # Call the schedule_interview function from the zap.py file
+#         success = schedule_interview(person_name, person_email, date, time)
 
-        if success:
-            st.sidebar.success("Interview Scheduled Successfully!")
-        else:
-            st.sidebar.error("Failed to Schedule Interview")
+#         if success:
+#             st.sidebar.success("Interview Scheduled Successfully!")
+#         else:
+#             st.sidebar.error("Failed to Schedule Interview")
