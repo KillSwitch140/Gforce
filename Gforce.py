@@ -68,7 +68,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     
     # Split documents into chunks
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    texts = text_splitter.create_documents(doc_texts)
+    texts = text_splitter.split_text(doc_texts)
     
     # Select embeddings
     embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
@@ -142,7 +142,7 @@ if st.button('Submit', key='submit_button'):
                 with st.chat_message(message["role"]):
                     st.write(message["content"])
         else:
-            st.warning("Please upload one or more PDF files and enter a question to start the conversation.")
+            st.warning("Please upload one or more TXT files and enter a question to start the conversation.")
 
 def clear_chat_history():
     st.session_state.messages = [{"role": "assistant", "content": "How may I assist you today?"}]
