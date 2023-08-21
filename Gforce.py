@@ -53,50 +53,50 @@ openai_api_key = st.secrets["OPENAI_API_KEY"]
 
 
 
-def read_pdf_text(uploaded_file):
-    pdf_reader = PyPDF2.PdfReader(uploaded_file)
-    text = ""
+# def read_pdf_text(uploaded_file):
+#     pdf_reader = PyPDF2.PdfReader(uploaded_file)
+#     text = ""
 
-    for page in pdf_reader.pages:
-        text += page.extract_text()
+#     for page in pdf_reader.pages:
+#         text += page.extract_text()
 
-    return text
+#     return text
 
 def generate_response(doc_texts, openai_api_key, query_text):
 
     llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.1,openai_api_key=openai_api_key)
     
-    # Split documents into chunks
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    texts = text_splitter.create_documents(doc_texts)
+    # # Split documents into chunks
+    # text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+    # texts = text_splitter.create_documents(doc_texts)
     
     # Select embeddings
     embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
     
     # Create a vectorstore from documents
-    db = Chroma.from_documents(texts, embeddings)
+    db = Chroma.from_documents(doc_texts, embeddings)
     # Create retriever interface
     retriever = db.as_retriever(search_type="similarity")
     #Bot memory
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    # custom_prompt_template = """You are a hiring manager's helpful assistant that reads multiple resumes of candidates and answers the hiring manager's questions related to the candidates,\
-    #                     Do your best to answer the hiring manager's so that it helps them select candidates better\
-    #                     Your goal is to aid the hiring in the candidate selection process.
-    #                     If you don't know the answer, just say that you don't know, don't try to make up an answer.\
-    #                     If you are asked to summarize a candidate'sresume, summarize it in 7 sentences, 3 sentences for their experience, 2 sentences projects, 1 sentence for their education and 1 sentence for their skills\
-    #                     If you are asked to compare certain candidates just provide the separate summarization of those candidate's resumes.\
-    #                     If you are asked for the candidate's email, provide them with the candidate's email along with the candidate's name\
-    #                     If you asked to select a candidates based on certain skills or experience then go through the resumes and find the candidates with the relevant skills or experience and provide the hiring manager with a list of those candidates/
+    custom_prompt_template = """You are project planner. You will be given a codebase and will have to break it down into subtasks for teams to develop/
+    Plan out out each task and subtask step by step. Plan tasks only relevant to the provided document. Do not make up irrelevant tasks./
+    Be helpful and answer in detail while preferring to use information from provided documents.
+    Task: Prepare  in 3 paragraphs
+Topic: Project Planning
+Style: Technical
+Tone: Professional
+Audience: Project Manager
 
-    # Context: {context}
-    # Question: {question}
+    Context: {context}
+    Question: {question}
 
-    # Only return the helpful answer below and nothing else.
-    # Helpful answer:
-    # """
+    Only return the helpful answer below and nothing else.
+    Helpful answer:
+    """
     
-    # prompt = PromptTemplate(template=custom_prompt_template,
-    #                         input_variables=['context', 'question'])
+    prompt = PromptTemplate(template=custom_prompt_template,
+                            input_variables=['context', 'question'])
     
     docs = db.similarity_search(query_text)
     #Create QA chain 
@@ -104,7 +104,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
                                        chain_type='stuff',
                                        retriever=retriever,
                                        return_source_documents=False,
-                                       # chain_type_kwargs={'prompt': prompt}
+                                       chain_type_kwargs={'prompt': prompt}
                                        )
     response = qa({'query': query_text})
     return response["result"]
@@ -118,7 +118,7 @@ st.set_page_config(page_title='Gforce Resume Assistant', layout='wide')
 st.title('Gforce Resume Assistant')
 
 # File upload
-uploaded_files = st.file_uploader('Please upload you resume(s)', type=['pdf'], accept_multiple_files=True)
+uploaded_files = st.file_uploader('Please upload you resume(s)', type=['txt'], accept_multiple_files=True)
 
 # Query text
 query_text = st.text_input('Enter your question:', placeholder='Select candidates based on experience and skills')
@@ -133,7 +133,7 @@ if st.button('Submit', key='submit_button'):
         if uploaded_files and query_text:
             documents = [read_pdf_text(file) for file in uploaded_files]
             with st.spinner('Chatbot is typing...'):
-                response = generate_response(documents, openai_api_key, query_text)
+                response = generate_response(uploaded_files, openai_api_key, query_text)
                 st.session_state.chat_placeholder.append({"role": "user", "content": query_text})
                 st.session_state.chat_placeholder.append({"role": "assistant", "content": response})
 
