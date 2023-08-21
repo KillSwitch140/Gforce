@@ -74,7 +74,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
     
     # Create a vectorstore from documents
-    db = Chroma.from_text(doc_texts, embeddings)
+    db = Chroma.from_texts(doc_texts, embeddings)
     # Create retriever interface
     retriever = db.as_retriever(search_type="similarity")
     #Bot memory
