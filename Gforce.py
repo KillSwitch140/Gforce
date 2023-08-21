@@ -74,7 +74,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
     
     # Create a vectorstore from documents
-    db = Chroma.from_documents(doc_texts, embeddings)
+    db = Chroma.from_text(doc_texts, embeddings)
     # Create retriever interface
     retriever = db.as_retriever(search_type="similarity")
     #Bot memory
@@ -111,7 +111,7 @@ Audience: Project Manager
     
 # Store LLM generated responses
 if "messages" not in st.session_state.keys():
-    st.session_state.messages = [{"role": "assistant", "content": "You are a Q&A chatbot that answers questions based on uploaded files"}]
+    st.session_state.messages = [{"role": "assistant", "content": "You are project planner that prepares tasks based on uploaded files"}]
 
 # Page title
 st.set_page_config(page_title='Gforce Resume Assistant', layout='wide')
