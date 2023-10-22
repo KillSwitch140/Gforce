@@ -141,27 +141,27 @@ def clear_chat_history():
 st.button('Clear Chat History', on_click=clear_chat_history)
 
 
-st.sidebar.header("Schedule Interview")
-person_name = st.sidebar.text_input("Enter Person's Name", "")
-person_email = st.sidebar.text_input("Enter Person's Email Address", "")
-date = st.sidebar.date_input("Select Date for Interview")
-time = st.sidebar.time_input("Select Time for Interview")
-schedule_button = st.sidebar.button("Schedule Interview")
+# st.sidebar.header("Schedule Interview")
+# person_name = st.sidebar.text_input("Enter Person's Name", "")
+# person_email = st.sidebar.text_input("Enter Person's Email Address", "")
+# date = st.sidebar.date_input("Select Date for Interview")
+# time = st.sidebar.time_input("Select Time for Interview")
+# schedule_button = st.sidebar.button("Schedule Interview")
 
-if schedule_button:
-    if not person_name:
-        st.sidebar.error("Please enter the person's name.")
-    elif not person_email:
-        st.sidebar.error("Please enter the person's email address.")
-    elif not date:
-        st.sidebar.error("Please select the date for the interview.")
-    elif not time:
-        st.sidebar.error("Please select the time for the interview.")
-    else:
-        # Call the schedule_interview function from the zap.py file
-        success = schedule_interview(person_name, person_email, date, time)
+# if schedule_button:
+#     if not person_name:
+#         st.sidebar.error("Please enter the person's name.")
+#     elif not person_email:
+#         st.sidebar.error("Please enter the person's email address.")
+#     elif not date:
+#         st.sidebar.error("Please select the date for the interview.")
+#     elif not time:
+#         st.sidebar.error("Please select the time for the interview.")
+#     else:
+#         # Call the schedule_interview function from the zap.py file
+#         success = schedule_interview(person_name, person_email, date, time)
 
-        if success:
-            st.sidebar.success("Interview Scheduled Successfully!")
-        else:
-            st.sidebar.error("Failed to Schedule Interview")
+#         if success:
+#             st.sidebar.success("Interview Scheduled Successfully!")
+#         else:
+#             st.sidebar.error("Failed to Schedule Interview")
