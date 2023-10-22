@@ -68,13 +68,13 @@ def generate_response(doc_texts, openai_api_key, query_text):
     
     # Split documents into chunks
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    texts = text_splitter.split_text(doc_texts)
+    texts = text_splitter.create_documents(doc_texts)
     
     # Select embeddings
     embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
     
     # Create a vectorstore from documents
-    db = Chroma.from_texts(texts, embeddings)
+    db = Chroma.from_documents(texts, embeddings)
     # Create retriever interface
     retriever = db.as_retriever(search_type="similarity")
     #Bot memory
@@ -82,7 +82,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     custom_prompt_template = """you are a Political Entertainment expert and you will answer the following questions to the best of your knowledge truthfully without making up anything
     """
     
-    prompt = PromptTemplate(template=custom_prompt_template,
+  prompt = PromptTemplate(template=custom_prompt_template,
                             input_variables=['context', 'question'])
     
     docs = db.similarity_search(query_text)
@@ -98,7 +98,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     
 # Store LLM generated responses
 if "messages" not in st.session_state.keys():
-    st.session_state.messages = [{"role": "assistant", "content": "You are project planner that prepares tasks based on uploaded files"}]
+    st.session_state.messages = [{"role": "assistant", "content": "You are a AI assistant created to help hiring managers review resumes and shortlist candidates. You have been provided with resumes and job descriptions to review. When asked questions, use the provided documents to provide helpful and relevant information to assist the hiring manager. Be concise, polite and professional. Do not provide any additional commentary or opinions beyond answering the questions directly based on the provided documents."}]
 
 # Page title
 st.set_page_config(page_title='Gforce Resume Assistant', layout='wide')
@@ -106,7 +106,7 @@ st.title('Gforce Resume Assistant')
 
 # File upload
 uploaded_files = st.file_uploader('Please upload you resume(s)', type=['pdf'], accept_multiple_files=True)
-doc_texts = read_pdf_text(uploaded_files)
+
 # Query text
 query_text = st.text_input('Enter your question:', placeholder='Select candidates based on experience and skills')
 
@@ -118,9 +118,9 @@ if "chat_placeholder" not in st.session_state.keys():
 if st.button('Submit', key='submit_button'):
     if openai_api_key.startswith('sk-'):
         if uploaded_files and query_text:
-            #documents = [read_pdf_text(file) for file in uploaded_files]
+            documents = [read_pdf_text(file) for file in uploaded_files]
             with st.spinner('Chatbot is typing...'):
-                response = generate_response(doc_texts, openai_api_key, query_text)
+                response = generate_response(documents, openai_api_key, query_text)
                 st.session_state.chat_placeholder.append({"role": "user", "content": query_text})
                 st.session_state.chat_placeholder.append({"role": "assistant", "content": response})
 
@@ -129,7 +129,7 @@ if st.button('Submit', key='submit_button'):
                 with st.chat_message(message["role"]):
                     st.write(message["content"])
         else:
-            st.warning("Please upload one or more TXT files and enter a question to start the conversation.")
+            st.warning("Please upload one or more PDF files and enter a question to start the conversation.")
 
 def clear_chat_history():
     st.session_state.messages = [{"role": "assistant", "content": "How may I assist you today?"}]
