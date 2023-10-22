@@ -82,7 +82,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     custom_prompt_template = """you are a Political Entertainment expert and you will answer the following questions to the best of your knowledge truthfully without making up anything
     """
     
-  prompt = PromptTemplate(template=custom_prompt_template,
+    prompt = PromptTemplate(template=custom_prompt_template,
                             input_variables=['context', 'question'])
     
     docs = db.similarity_search(query_text)
