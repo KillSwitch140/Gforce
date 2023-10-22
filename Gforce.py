@@ -79,20 +79,7 @@ def generate_response(doc_texts, openai_api_key, query_text):
     retriever = db.as_retriever(search_type="similarity")
     #Bot memory
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    custom_prompt_template = """You are project planner. You will be given a codebase and will have to break it down into subtasks for teams to develop/
-    Plan out out each task and subtask step by step. Plan tasks only relevant to the provided document. Do not make up irrelevant tasks./
-    Be helpful and answer in detail while preferring to use information from provided documents.
-    Task: Prepare  in 3 paragraphs
-Topic: Project Planning
-Style: Technical
-Tone: Professional
-Audience: Project Manager
-
-    Context: {context}
-    Question: {question}
-
-    Only return the helpful answer below and nothing else.
-    Helpful answer:
+    custom_prompt_template = """you are a Political Entertainment expert and you will answer the following questions to the best of your knowledge truthfully without making up anything
     """
     
     prompt = PromptTemplate(template=custom_prompt_template,
@@ -153,28 +140,28 @@ def clear_chat_history():
 
 st.button('Clear Chat History', on_click=clear_chat_history)
 
-# Create a sidebar with text input boxes and a button
-# st.sidebar.header("Schedule Interview")
-# person_name = st.sidebar.text_input("Enter Person's Name", "")
-# person_email = st.sidebar.text_input("Enter Person's Email Address", "")
-# date = st.sidebar.date_input("Select Date for Interview")
-# time = st.sidebar.time_input("Select Time for Interview")
-# schedule_button = st.sidebar.button("Schedule Interview")
+Create a sidebar with text input boxes and a button
+st.sidebar.header("Schedule Interview")
+person_name = st.sidebar.text_input("Enter Person's Name", "")
+person_email = st.sidebar.text_input("Enter Person's Email Address", "")
+date = st.sidebar.date_input("Select Date for Interview")
+time = st.sidebar.time_input("Select Time for Interview")
+schedule_button = st.sidebar.button("Schedule Interview")
 
-# if schedule_button:
-#     if not person_name:
-#         st.sidebar.error("Please enter the person's name.")
-#     elif not person_email:
-#         st.sidebar.error("Please enter the person's email address.")
-#     elif not date:
-#         st.sidebar.error("Please select the date for the interview.")
-#     elif not time:
-#         st.sidebar.error("Please select the time for the interview.")
-#     else:
-#         # Call the schedule_interview function from the zap.py file
-#         success = schedule_interview(person_name, person_email, date, time)
+if schedule_button:
+    if not person_name:
+        st.sidebar.error("Please enter the person's name.")
+    elif not person_email:
+        st.sidebar.error("Please enter the person's email address.")
+    elif not date:
+        st.sidebar.error("Please select the date for the interview.")
+    elif not time:
+        st.sidebar.error("Please select the time for the interview.")
+    else:
+        # Call the schedule_interview function from the zap.py file
+        success = schedule_interview(person_name, person_email, date, time)
 
-#         if success:
-#             st.sidebar.success("Interview Scheduled Successfully!")
-#         else:
-#             st.sidebar.error("Failed to Schedule Interview")
+        if success:
+            st.sidebar.success("Interview Scheduled Successfully!")
+        else:
+            st.sidebar.error("Failed to Schedule Interview")
