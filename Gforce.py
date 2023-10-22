@@ -140,7 +140,7 @@ def clear_chat_history():
 
 st.button('Clear Chat History', on_click=clear_chat_history)
 
-Create a sidebar with text input boxes and a button
+
 st.sidebar.header("Schedule Interview")
 person_name = st.sidebar.text_input("Enter Person's Name", "")
 person_email = st.sidebar.text_input("Enter Person's Email Address", "")
