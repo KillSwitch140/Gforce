@@ -94,8 +94,9 @@ if "chat_placeholder" not in st.session_state.keys():
 if st.button('Submit', key='submit_button'):
     if openai_api_key.startswith('sk-'):
         if uploaded_files and query_text:
+            documents = [uploaded_file.read().decode()]
             with st.spinner('Chatbot is typing...'):
-                response = generate_response(uploaded_files, cohere_api_key, query_text)
+                response = generate_response(documents, cohere_api_key, query_text)
                 st.session_state.chat_placeholder.append({"role": "user", "content": query_text})
                 st.session_state.chat_placeholder.append({"role": "assistant", "content": response})
 
