@@ -3,9 +3,9 @@ import datetime
 import os
 from os import environ
 import PyPDF2
-from langchain.agents import initialize_agent
-from langchain.agents.agent_toolkits import ZapierToolkit
-from langchain.utilities.zapier import ZapierNLAWrapper
+# from langchain.agents import initialize_agent
+# from langchain.agents.agent_toolkits import ZapierToolkit
+# from langchain.utilities.zapier import ZapierNLAWrapper
 from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.embeddings import OpenAIEmbeddings
@@ -13,7 +13,7 @@ from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
-from zap import schedule_interview
+# from zap import schedule_interview
 from langchain.chat_models import ChatCohere
 from langchain.chains import LLMChain
 from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, MessagesPlaceholder, HumanMessagePromptTemplate
