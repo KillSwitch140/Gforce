@@ -27,8 +27,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 
+cohere_api_key = st.secrets["COHERE_API_KEY"]
 openai_api_key = st.secrets["OPENAI_API_KEY"]
-
 
 def read_pdf_text(uploaded_file):
     pdf_reader = PyPDF2.PdfReader(uploaded_file)
@@ -39,7 +39,7 @@ def read_pdf_text(uploaded_file):
 
     return text
 
-def generate_response(doc_texts, openai_api_key, query_text):
+def generate_response(doc_texts, cohere_api_key, query_text):
 
        # Define the character's name and description
     text_splitter = RecursiveCharacterTextSplitter(separators=["\n"],chunk_size=1000, chunk_overlap=100)
@@ -95,7 +95,7 @@ if st.button('Submit', key='submit_button'):
     if openai_api_key.startswith('sk-'):
         if uploaded_files and query_text:
             with st.spinner('Chatbot is typing...'):
-                response = generate_response(uploaded_files, openai_api_key, query_text)
+                response = generate_response(uploaded_files, cohere_api_key, query_text)
                 st.session_state.chat_placeholder.append({"role": "user", "content": query_text})
                 st.session_state.chat_placeholder.append({"role": "assistant", "content": response})
 
