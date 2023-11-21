@@ -9,21 +9,14 @@ from langchain.utilities.zapier import ZapierNLAWrapper
 from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
-from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
-import pysqlite3
 from langchain.chat_models import ChatOpenAI
-import sys
-sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
-import qdrant_client
-from qdrant_client import QdrantClient,models
-from qdrant_client.http.models import PointStruct
 from langchain.agents import initialize_agent
 from langchain.vectorstores import Qdrant
-#from zap import schedule_interview
+from zap import schedule_interview
 from langchain.chat_models import ChatCohere
 from langchain.chains import LLMChain
 from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, MessagesPlaceholder, HumanMessagePromptTemplate
