@@ -8,14 +8,11 @@ from langchain.agents.agent_toolkits import ZapierToolkit
 from langchain.utilities.zapier import ZapierNLAWrapper
 from langchain.llms import OpenAI
 from langchain.memory import ConversationBufferMemory
-from langchain.chains import ConversationalRetrievalChain
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.vectorstores import Chroma
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 from langchain.chat_models import ChatOpenAI
-from langchain.agents import initialize_agent
-from langchain.vectorstores import Qdrant
 from zap import schedule_interview
 from langchain.chat_models import ChatCohere
 from langchain.chains import LLMChain
