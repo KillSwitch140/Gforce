@@ -24,7 +24,20 @@ from qdrant_client.http.models import PointStruct
 from langchain.agents import initialize_agent
 from langchain.vectorstores import Qdrant
 #from zap import schedule_interview
-
+from langchain.chat_models import ChatCohere
+from langchain.chains import LLMChain
+from langchain.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, MessagesPlaceholder, HumanMessagePromptTemplate
+from langchain.chains.question_answering import load_qa_chain
+from langchain.text_splitter import CharacterTextSplitter
+from langchain.docstore.document import Document
+from langchain.prompts import PromptTemplate
+from langchain.indexes.vectorstore import VectorstoreIndexCreator
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.embeddings import CohereEmbeddings
+from langchain.chains import ConversationalRetrievalChain
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain.vectorstores import Chroma
+from langchain.chains import RetrievalQA
 
 openai_api_key = st.secrets["OPENAI_API_KEY"]
 # QDRANT_COLLECTION ="resume"
@@ -64,37 +77,36 @@ def read_pdf_text(uploaded_file):
 
 def generate_response(doc_texts, openai_api_key, query_text):
 
-    llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0.1,openai_api_key=openai_api_key)
-    
-    # Split documents into chunks
-    text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
-    texts = text_splitter.create_documents(doc_texts)
-    
-    # Select embeddings
-    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-    
+       # Define the character's name and description
+    text_splitter = RecursiveCharacterTextSplitter(separators=["\n"],chunk_size=1000, chunk_overlap=100)
+    texts = text_splitter.split_text(doc_texts)
+    #print(texts)
+    chat_model = ChatCohere(cohere_api_key=cohere_api_key, model='command',temperature=0.1)
+    embeddings = CohereEmbeddings(cohere_api_key=cohere_api_key)
     # Create a vectorstore from documents
-    db = Chroma.from_documents(texts, embeddings)
+    vectorstore = Chroma.from_texts(texts, embeddings)
     # Create retriever interface
-    retriever = db.as_retriever(search_type="similarity")
-    #Bot memory
-    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-    custom_prompt_template = """you are a Political Entertainment expert and you will answer the following questions to the best of your knowledge truthfully without making up anything
-    """
     
-    prompt = PromptTemplate(template=custom_prompt_template,
-                            input_variables=['context', 'question'])
+    # Initialize the chat model for the character
+    chat_model = ChatCohere(cohere_api_key=cohere_api_key, model='command',temperature=0.0)
+    user_input2 = "Why was Ollivander curious?"
     
-    docs = db.similarity_search(query_text)
-    #Create QA chain 
-    qa =  RetrievalQA.from_chain_type(llm=llm,
-                                       chain_type='stuff',
-                                       retriever=retriever,
-                                       return_source_documents=False,
-                                       chain_type_kwargs={'prompt': prompt}
-                                       )
-    response = qa({'query': query_text})
-    return response["result"]
+    # Create the memory object
+    memory=ConversationBufferMemory(
+            memory_key='chat_history', return_messages=True)
+    search = vectorstore.similarity_search(user_input2)
+    print(search[0])
+    
+    # Create the QA chain with memory
+    conversation_chain = ConversationalRetrievalChain.from_llm(
+            llm=chat_model,
+            retriever= vectorstore.as_retriever(),
+            memory=memory
+        )
+    response = conversation_chain({'question': user_input2})
+    
+    # Ask a question and get the answer
+    print(response['chat_history'][1].content)
     
 # Store LLM generated responses
 if "messages" not in st.session_state.keys():
